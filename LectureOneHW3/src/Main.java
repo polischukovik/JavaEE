@@ -23,8 +23,8 @@ public class Main {
 		
 		Container inner = new Container(6,5,3.5,"Hello",false,null,false);
 		Container c = new Container(5,3, 4.5, "Test", true, inner, true);
-		SerializeHelper.Save(new String[]{SerializeHelper.serialize(c)}, "data_file.dat");
-		
+
+		SerializeHelper.Save(new Container[]{c}, Container.class, "data_file.dat");		
 		for(Object o : SerializeHelper.Load("data_file.dat")){
 			System.out.println((Container) o);
 		}		
@@ -96,7 +96,7 @@ class SerializeHelper{
 	    map.put(double.class, Double.class);
 	}
 	
-	static void Save(String[] s, String path){
+	static void Save(Object[] obj, Class<?> cls, String path){
 		File file = new File(path);
 		if(!file.exists()){
 			try {
@@ -108,8 +108,8 @@ class SerializeHelper{
 		}
 		
 		try(PrintStream out = new PrintStream(new FileOutputStream(file))) {
-			for(String str : s){
-				out.println(str);
+			for(Object o : obj){
+				out.println(serialize(cls.cast(o)));
 			}
 		} catch (Exception e) {
 			System.out.println("Cannot write to file: " + e.getMessage());
