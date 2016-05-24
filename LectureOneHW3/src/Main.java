@@ -1,3 +1,4 @@
+import java.awt.List;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,7 +13,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -23,8 +26,8 @@ public class Main {
 		
 		Container inner = new Container(6,5,3.5,"Hello",false,null,false);
 		Container c = new Container(5,3, 4.5, "Test", true, inner, true);
-
-		SerializeHelper.Save(new Container[]{c}, Container.class, "data_file.dat");		
+		
+		SerializeHelper.Save(Arrays.asList(new Container[]{c}), "data_file.dat");		
 		for(Object o : SerializeHelper.Load("data_file.dat")){
 			System.out.println((Container) o);
 		}		
@@ -96,7 +99,7 @@ class SerializeHelper{
 	    map.put(double.class, Double.class);
 	}
 	
-	static void Save(Object[] obj, Class<?> cls, String path){
+	static <T> void Save(Collection<T> obj, String path){
 		File file = new File(path);
 		if(!file.exists()){
 			try {
@@ -109,7 +112,7 @@ class SerializeHelper{
 		
 		try(PrintStream out = new PrintStream(new FileOutputStream(file))) {
 			for(Object o : obj){
-				out.println(serialize(cls.cast(o)));
+				out.println(serialize(o.getClass().cast(o)));
 			}
 		} catch (Exception e) {
 			System.out.println("Cannot write to file: " + e.getMessage());
