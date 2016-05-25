@@ -1,105 +1,90 @@
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.*;
 
-public class Main {
+import javax.print.attribute.TextSyntax;
 
-	static private final class Test {
-		public String p = "Test string";
-		private int a = 7;
-		protected long b = 8;
-		
-		public Test() {}
-		public Test(int a) { this.a = a; }
-		public Test(int a, long b) { this.a = a; this.b = b; }
-		public int getA() { return a; }
-		public long getB() { return b; }
-		public void setA(int a) { this.a = a; }
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@interface SaveTo{
+	String path();
+}
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@interface Saver{
+}
+
+@SaveTo(path="file.txt")
+class TextContainer{
+	String text;
+	
+	public TextContainer() {
+		 text = "testtext";
 	}
 	
+	@Saver
+	public void saver(String path, String text){
+		File file = new File(path);
+		if(!file.exists()){
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				System.out.println("Cannot create file");
+			}
+		}
+		try(PrintStream out = new PrintStream(new FileOutputStream(file))){
+			out.println(text);
+		} catch (FileNotFoundException e) {
+			System.out.println("Cannot open file");
+		}
+	}
+}
+
+public class Main {	
 	public static void main(String[] args) {
-		final Class<?> cls = Test.class;
-		
-		System.out.println("Class name: " + cls.getName());
-		
-		System.out.print("Modifiers: ");
-		int mods = cls.getModifiers(); 
-		if (Modifier.isPrivate(mods))
-		    System.out.print("private "); 
-		if (Modifier.isAbstract(mods))
-		    System.out.print("abstract "); 
-		if (Modifier.isFinal(mods))
-		    System.out.print("final ");
-
-		System.out.println("All fields:");
-		Field[] fields = cls.getDeclaredFields();
-		for (Field field : fields) { 
-		     Class<?> fieldType = field.getType(); 
-		     System.out.println("\tName: " + field.getName()); 
-		     System.out.println("\tType: " + fieldType.getName()); 
-		} 
-		
-		System.out.println("Constructors:");
-		Constructor<?>[] constrs = cls.getConstructors(); 
-		for (Constructor<?> ctr : constrs) { 
-		    Class<?>[] paramTypes = ctr.getParameterTypes(); 
-		    for (Class<?> paramType : paramTypes) { 
-		        System.out.print(paramType.getName() + " "); 
-		    } 
-		    System.out.println();
-		} 
-		
-		try {
-			Class<?>[] paramTypes = new Class<?>[] { int.class }; 
-			Constructor<?> ctr = cls.getConstructor(paramTypes); 
-			Test t = (Test)ctr.newInstance(1);
-			System.out.println("Fields: " + t.getA() + ", " + t.getB());
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		TextContainer o = new TextContainer();
+		Class<?> cls = o.getClass();
+		String path = cls.getAnnotation(SaveTo.class).path();
+		Field textField = null;
+		Method saverMethod = null;
+		for(Field f : cls.getDeclaredFields()){
+			f.setAccessible(true);
+			if(f.getType().getName().equals("java.lang.String")){
+				textField = f;
+				break;
+			}
+		}
+		for(Method m : cls.getDeclaredMethods()){
+			m.setAccessible(true);
+			if(m.isAnnotationPresent(Saver.class)){
+				saverMethod = m;
+				break;
+			}
 		}
 		
-		Method[] methods = cls.getMethods(); 
-		for (Method method : methods) { 
-		    System.out.println("Name: " + method.getName()); 
-		    System.out.println("\tReturn type: " + method.getReturnType().getName()); 
-		 
-		    Class<?>[] paramTypes = method.getParameterTypes(); 
-		    System.out.print("\tParam types:"); 
-		    for (Class<?> paramType : paramTypes) { 
-		        System.out.print(" " + paramType.getName()); 
-		    } 
-		    System.out.println(); 
-		} 
-		
-		try {
-			Test obj = new Test();
-			Class<?>[] paramTypes = new Class<?>[] { int.class }; 
-			Method method = cls.getMethod("setA", paramTypes);
-			method.invoke(obj, 55);
-			
-			System.out.println("A: " + obj.getA());
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		if(textField != null && saverMethod != null && path != null){
+			try {
+				saverMethod.invoke(o, path, textField.get(o));
+			} catch (IllegalAccessException e) {
+				System.out.println("Method is private");
+			} catch (IllegalArgumentException e) {
+				System.out.println("Wrong nunmber or type of arguments");
+			} catch (InvocationTargetException e) {
+				System.out.println(e);
+			}
+		}else{
+			System.out.println((textField == null ? "No text in textfield or no textfield\n" : "") + (saverMethod == null ? "No saver method found\n" : "") + (path == null ? "Cannnot detect saver path\n" : ""));
 		}
 		
-		try {
-			Test obj = new Test();
-			Class<?>[] paramTypes = new Class<?>[] { int.class }; 
-			Method method = cls.getMethod("someUnknownMethod", paramTypes);
-			method.invoke(obj, 55);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		// CyberVision
-		try {
-			Test obj = new Test();
-			Field field = cls.getDeclaredField("a");
-			field.setAccessible(true);
-			System.out.println("Private field value: " + field.getInt(obj));
-			field.setInt(obj, 100);
-			System.out.println("New private field value: " + field.getInt(obj));
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		
 	}
 }
