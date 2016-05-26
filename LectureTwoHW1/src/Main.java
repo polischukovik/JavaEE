@@ -186,15 +186,15 @@ class TrainXMLHelper{
 
 	    @Override
 	    public String marshal(Date v) throws Exception {
-	        synchronized (dateFormat) {
-	            return dateFormat.format(v);
+	        synchronized (timeFormat) {
+	            return timeFormat.format(v);
 	        }
 	    }
 
 	    @Override
 	    public Date unmarshal(String v) throws Exception {
-	        synchronized (dateFormat) {
-	            return dateFormat.parse(v);
+	        synchronized (timeFormat) {
+	            return timeFormat.parse(v);
 	        }
 	    }
 	}
