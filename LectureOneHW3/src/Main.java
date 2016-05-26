@@ -3,15 +3,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,13 +22,12 @@ public class Main {
 		
 		Container inner = new Container(6,5,3.5,"Hello",false,null,false);
 		Container c = new Container(5,3, 4.5, "Test", true, inner, true);
-		SerializeHelper.Save(new String[]{SerializeHelper.serialize(c)}, "data_file.dat");
 		
+		SerializeHelper.Save(Arrays.asList(new Container[]{c}), "data_file.dat");  		
 		for(Object o : SerializeHelper.Load("data_file.dat")){
-			System.out.println((Container) o);
-		}		
+  			System.out.println((Container) o);
+  		}
 	}
-		
 }
 
 @Target(ElementType.FIELD)
@@ -82,9 +80,9 @@ class SerializeHelper{
 	final static String OBJECT_CONTAINER_END = "]";
 	final static String TYPE_CONTAINER_BEGIN = "(";
 	final static String TYPE_CONTAINER_END = ")";
-	final static String FIELD_SEPARATOR = ";"; 
-	
+	final static String FIELD_SEPARATOR = ";"; 	
 	public final static Map<Class<?>, Class<?>> map = new HashMap<Class<?>, Class<?>>();
+	
 	static {
 	    map.put(boolean.class, Boolean.class);
 	    map.put(byte.class, Byte.class);
@@ -96,7 +94,7 @@ class SerializeHelper{
 	    map.put(double.class, Double.class);
 	}
 	
-	static void Save(String[] s, String path){
+	static <T> void Save(Collection<T> obj, String path){
 		File file = new File(path);
 		if(!file.exists()){
 			try {
@@ -108,11 +106,11 @@ class SerializeHelper{
 		}
 		
 		try(PrintStream out = new PrintStream(new FileOutputStream(file))) {
-			for(String str : s){
-				out.println(str);
-			}
-		} catch (Exception e) {
-			System.out.println("Cannot write to file: " + e.getMessage());
+  			for(Object o : obj){
+ 				out.println(serialize(o.getClass().cast(o)));
+  			}
+  		} catch (Exception e) {
+  			System.out.println("Cannot write to file: " + e.getMessage());
 			return;
 		}		
 	}
@@ -136,7 +134,7 @@ class SerializeHelper{
 		
 	}
 	
-	static String[] split(String s){
+	private static String[] split(String s){
 		String[] res = new String[0];
 		int fieldBegins = 0, fieldEnds;
 		boolean loop = true;
@@ -159,10 +157,11 @@ class SerializeHelper{
 		return res;
 	}
 
-	//Container[v_int(int)=3;v_double(double)=4.5;v_string(java.lang.String)=Test;v_boolean(boolean)=true;o_container(Container)=Container[...];v_o_boolean(java.lang.Boolean)=true]
-	public static String serialize(Object o) {
+	//Container[vInt(java.lang.Integer)=3;vDouble(java.lang.Double)=4.5;vString(java.lang.String)=Test;vBoolean(java.lang.Boolean)=true;oContainer(Container)=Container[...];vOBoolean(java.lang.Boolean)=true]
+
+	private static String serialize(Object o) {
 		if (o == null){
-			return "null"; //recurtion exit point
+			return "null"; //Recursion exit point
 		}
 		String objectContent = "";
 		
@@ -178,20 +177,23 @@ class SerializeHelper{
 				fieldEntity += TYPE_CONTAINER_BEGIN + field.getType().getName() + TYPE_CONTAINER_END + "=";;
 			}
 			try {
-				if(field.getType().isPrimitive()){	//is primitive	
-					
-						fieldEntity += field.get(o);
-					
+				/*
+				 * is primitive	
+				 */
+				if(field.getType().isPrimitive()){						
+						fieldEntity += field.get(o);					
 					if(objectContent.length() != 0){
 						objectContent += ";";
 					}
 					objectContent += fieldEntity;
-				}else{	//not primitive: Wrap-Class or Custom Class
+				}else{	
+				/*
+				 * not primitive: Wrap-Class or Custom Class	
+				 */
 					if(objectContent.length() != 0){
 						objectContent += FIELD_SEPARATOR;
 					}
-					//if(Class.forName(field.getType().getName()).getName().equals("java.lang."+field.getType().getSimpleName())){
-					if(map.values().contains(field.getType()) || field.getType().getName() == "java.lang.String"){
+					if(map.values().contains(field.getType()) || field.getType() == java.lang.String.class){
 						objectContent += fieldEntity + field.get(o);
 					}else{
 						objectContent += fieldEntity + serialize(field.get(o));
@@ -208,14 +210,14 @@ class SerializeHelper{
 		return o.getClass().getName() + OBJECT_CONTAINER_BEGIN + objectContent + OBJECT_CONTAINER_END;
 	}	
 	
-	public static Object deserialize(String s) {		
+	private static Object deserialize(String s) {		
 		if (s.equals("null")){
-			return null; //recurtion exit point
+			return null; //Recursion exit point
 		}
 		String className = s.substring(0, s.indexOf(OBJECT_CONTAINER_BEGIN));
 		String objContent = s.substring(s.indexOf(OBJECT_CONTAINER_BEGIN) + 1, s.lastIndexOf(OBJECT_CONTAINER_END));
 		
-		Class cls;
+		Class<?> cls;
 		try {
 			cls = Class.forName(className);
 		} catch (ClassNotFoundException e) {
@@ -238,7 +240,7 @@ class SerializeHelper{
 				if(map.values().contains(Class.forName(fieldType))){
 					field.set(o, Class.forName(fieldType).getDeclaredMethod("valueOf",java.lang.String.class).invoke(null, value));
 				}else{			
-					if(field.getType().getName() == "java.lang.String"){
+					if(field.getType() == java.lang.String.class){
 						field.set(o, value);
 					}else{
 						field.set(o, deserialize(value));
