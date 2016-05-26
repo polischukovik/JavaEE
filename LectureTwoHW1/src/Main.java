@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -21,30 +21,19 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 public class Main {
 
-	public static void main(String[] args) throws ParseException {
+	public static void main(String[] args) throws ParseException {		
 		Date today = new SimpleDateFormat("DD.MM.yyyy HH:mm:ss").parse("19.01.2013 12:33:14");
 		
-		Trains trains = TrainXMLHelper.parseXML("source.xml");
-		Trains filtered = new Trains ((Set<Train>) trains.getTrains().stream().filter(
-				t -> {
-						try {
-							SimpleDateFormat dateFormat = new SimpleDateFormat("DD.MM.yyyy");
-							SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-							//return t.getDate().equals(dateFormat.parse(dateFormat.format(Calendar.getInstance().getTime()))) //current date
-							return t.getDate().equals(dateFormat.parse(dateFormat.format(today))) //specified Date
-									&& t.getDeparture().after(timeFormat.parse("15:00"))
-									&& t.getDeparture().before(timeFormat.parse("19:00"));
-						} catch (Exception e) {
-							System.out.println("Cannot parse date");
-						}
-						return false;					
-					}						
-				).collect(Collectors.toSet()));
+		Trains trains = TrainXMLHelper.importXML("source.xml");
+		System.out.println("Filtered by date and departure time: \n" + trains.filter(today, "15:00", "19:00"));
 		
-		System.out.println("Filtered by date and departure time: \n" + filtered);
-		System.out.println("Full list of trains: \n" + trains);
+		trains.add(new Train(13, "Kyiv", "Ternopil", "19.01.2013", "15:35"));
+		TrainXMLHelper.exportXML(trains, "source.xml");		
+		trains = TrainXMLHelper.importXML("source.xml");
+		System.out.println("Filtered by date and departure time: \n" + trains.filter(today, "15:00", "19:00"));
 
 	}
+
 }
 
 @XmlRootElement(name="trains")
@@ -62,6 +51,27 @@ class Trains{
 	
 	public Set<Train> getTrains(){
 		return new HashSet<>(trains);		
+	}
+	
+	public void add(Train train){
+		trains.add(train);
+	}
+	
+	public Trains filter(Date date, String timeFrom, String timeTo){
+		return new Trains ((Set<Train>) this.getTrains().stream().filter(
+				t -> {
+						try {
+							//return t.getDate().equals(dateFormat.parse(dateFormat.format(Calendar.getInstance().getTime()))) //current date
+							return t.getDate().equals(TrainXMLHelper.dateFormat.parse(TrainXMLHelper.dateFormat.format(date))) //specified Date
+									&& t.getDeparture().after(TrainXMLHelper.timeFormat.parse(timeFrom))
+									&& t.getDeparture().before(TrainXMLHelper.timeFormat.parse(timeTo));
+						} catch (Exception e) {
+							System.out.println("Cannot parse date");
+							System.out.println(t.getDeparture());
+						}
+						return false;					
+					}						
+				).collect(Collectors.toSet()));
 	}
 	
 	@Override
@@ -88,6 +98,22 @@ class Train{
 	@XmlJavaTypeAdapter(TrainXMLHelper.TimeAdapter.class)
 	private Date departure;
 	
+	public Train(){		
+	}
+	
+	public Train(int id, String from, String to, String date, String departure) {
+		super();
+		this.id = id;
+		this.from = from;
+		this.to = to;
+		try {
+			this.date = TrainXMLHelper.dateFormat.parse(date);		
+			this.departure = TrainXMLHelper.timeFormat.parse(departure);
+		} catch (ParseException e) {
+			System.err.println("Cannot parse dates for train id = " + id);
+		}
+	}
+
 	public int getId() {
 		return id;
 	}
@@ -123,22 +149,20 @@ class Train{
 	}
 	@Override
 	public String toString() {
-		return "Train [id=" + id + ", from=" + from + ", to=" + to + ", date=" + new SimpleDateFormat("DD.MM.yyyy").format(date) + ", departure=" + new SimpleDateFormat("HH:mm").format(departure)
+		return "Train [id=" + id + ", from=" + from + ", to=" + to + ", date=" + TrainXMLHelper.dateFormat.format(date) + ", departure=" + TrainXMLHelper.timeFormat.format(departure)
 				+ "]";
 	}
 }
 
 class TrainXMLHelper{	
+	public static SimpleDateFormat dateFormat = new SimpleDateFormat("DD.MM.yyyy");
+	public static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");	
 	
-	public static Trains parseXML(String path){
+	public static Trains importXML(String path){
 		File file = new File(path);
-		JAXBContext context;
 		Trains trains = null;
-		try {
-			context = JAXBContext.newInstance(Trains.class);
-			Unmarshaller unmarshaller = context.createUnmarshaller();
-			
-			trains = (Trains) unmarshaller.unmarshal(file);
+		try {			
+			trains = (Trains) JAXBContext.newInstance(Trains.class).createUnmarshaller().unmarshal(file);
 		} catch (JAXBException e) {
 			System.out.println("Cannot parse file: ");
 			e.printStackTrace();
@@ -146,9 +170,19 @@ class TrainXMLHelper{
 		return trains;			
 	}
 	
-	static class TimeAdapter extends XmlAdapter<String, Date> {
+	public static void exportXML(Trains trains, String path) {
+		File file = new File(path);
+		try {
+			Marshaller marshaller = JAXBContext.newInstance(Trains.class).createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			marshaller.marshal(trains, file);
+		} catch (JAXBException e) {
+			System.out.println("Cannot create xml: ");
+			e.printStackTrace();
+		}			
+	}
 
-	    private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+	static class TimeAdapter extends XmlAdapter<String, Date> {
 
 	    @Override
 	    public String marshal(Date v) throws Exception {
@@ -166,8 +200,6 @@ class TrainXMLHelper{
 	}
 	
 	static class DateAdapter extends XmlAdapter<String, Date> {
-
-	    private final SimpleDateFormat dateFormat = new SimpleDateFormat("DD.MM.yyyy");
 
 	    @Override
 	    public String marshal(Date v) throws Exception {
