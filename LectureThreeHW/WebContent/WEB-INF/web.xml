@@ -7,7 +7,7 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 
 	<servlet>
 		<servlet-name>Survey</servlet-name>
-		<servlet-class>ua.kiev.prog.Survey</servlet-class>
+		<servlet-class>Survey</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>Survey</servlet-name>
