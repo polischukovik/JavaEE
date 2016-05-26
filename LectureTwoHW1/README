@@ -1,0 +1,17 @@
+≈сть список поездов, представленный с виде XML. ¬ывести на экран информацию о тех поездах, которые отправл€ютс€ сегодн€ с 15:00 до 19:00.
+<?xml version="1.0" encoding="UTF-8"?>
+<trains>
+<train id=У1Ф>
+<from>Kyiv</from>
+<to>Donetsk</to>
+<date>19.12.2013</date>
+<departure>15:05</departure>
+</train>
+<train id=У2Ф>
+<from>Lviv</from>
+<to>Donetsk</to>
+<date>19.12.2013</date>
+<departure>19:05</departure>
+</train>
+</trains>
+Ќаписать код дл€ добавлени€ новых поездов в существующий XML

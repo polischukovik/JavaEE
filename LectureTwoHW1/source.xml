@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<trains>
+
+	<train id="1">
+	<from>Kyiv</from>
+	<to>Donetsk</to>
+	<date>19.12.2013</date>
+	<departure>15:05</departure>
+	</train>
+	
+	<train id="2">
+	<from>Lviv</from>
+	<to>Donetsk</to>
+	<date>19.12.2013</date>
+	<departure>11:05</departure>
+	</train>
+	
+	<train id="3">
+	<from>Kyiv</from>
+	<to>Kharkiv</to>
+	<date>19.12.2013</date>
+	<departure>12:05</departure>
+	</train>
+	
+	<train id="4">
+	<from>Lviv</from>
+	<to>Vinnytsya</to>
+	<date>19.12.2013</date>
+	<departure>13:05</departure>
+	</train>
+	
+	<train id="5">
+	<from>Kyiv</from>
+	<to>Dnipro</to>
+	<date>19.12.2013</date>
+	<departure>14:05</departure>
+	</train>
+	
+	<train id="6">
+	<from>Lviv</from>
+	<to>Melitopol</to>
+	<date>21.12.2013</date>
+	<departure>16:05</departure>
+	</train>
+	
+	<train id="7">
+	<from>Kyiv</from>
+	<to>Uzhgorod</to>
+	<date>19.12.2013</date>
+	<departure>18:05</departure>
+	</train>
+	
+	<train id="8">
+	<from>Lviv</from>
+	<to>Odessa</to>
+	<date>19.12.2013</date>
+	<departure>19:05</departure>
+	</train>
+	
+	<train id="9">
+	<from>Kyiv</from>
+	<to>Mykolayv</to>
+	<date>19.12.2013</date>
+	<departure>20:05</departure>
+	</train>
+	
+	<train id="10">
+	<from>Lviv</from>
+	<to>Tcherkasy</to>
+	<date>19.12.2013</date>
+	<departure>21:05</departure>
+	</train>
+	
+	<train id="11">
+	<from>Lviv</from>
+	<to>Tcherkasy</to>
+	<date>19.12.2013</date>
+	<departure>15:05</departure>
+	</train>
+	
+	<train id="12">
+	<from>Lviv</from>
+	<to>Tcherkasy</to>
+	<date>22.12.2013</date>
+	<departure>15:05</departure>
+	</train>
+</trains>
