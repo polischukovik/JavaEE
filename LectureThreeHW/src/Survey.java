@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -50,9 +49,9 @@ public class Survey extends HttpServlet{
 			table += String.format("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
 					r.name, r.surname, r.age, r.gender, r.like, r.from);
 		}
+		table += String.format("<tr><td><b>Total</b></td><td><b>Responses:%d</b></td><td><b>avg: %.2f </b></td><td></td><td><b>%d</b></td><td></td></tr>",
+				survey.size(),survey.stream().mapToInt(t -> t.age).average().getAsDouble(), survey.stream().mapToInt(t -> t.like).sum());
 		pw.println(String.format(htmlCore, table));
-		//pw.println("<tr><td><b>Total</b></td><td>avg: %d</td><td></td><td></td><td>%d</td><td>From</td></tr>",
-			//	survey.stream().collect(Collectors.averagingDouble(s -> s.age), survey.stream().collect(Collectors.summingInt(s -> s.like))));
 		
 	}
 }
