@@ -1,0 +1,27 @@
+Написать парсер для Yahoo Finance в
+режиме XML (format=xml)
+
+<?xml version="1.0" encoding="UTF-8"?>
+<query xmlns:yahoo="http://www.yahooapis.com/v1/base.rng" yahoo:count="2" yahoo:created="2016-05-27T11:58:27Z" yahoo:lang="en-US">
+	<results>
+		<rate id="USDEUR">
+			<Name>USD/EUR</Name>
+			<Rate>0.8946</Rate>
+			<Date>5/27/2016</Date>
+			<Time>9:07am</Time>
+			<Ask>0.8947</Ask>
+			<Bid>0.8946</Bid>
+		</rate>
+		<rate id="USDUAH">
+			<Name>USD/UAH</Name>
+			<Rate>25.1100</Rate>
+			<Date>5/26/2016</Date>
+			<Time>4:01pm</Time>
+			<Ask>25.1200</Ask>
+			<Bid>25.1100</Bid>
+		</rate>
+	</results>
+</query>
+<!-- total: 9 -->
+<!-- main-6df745a4-1dfa-11e6-b981-e83935aedd3a -->
+
