@@ -28,7 +28,6 @@ public class Main {
 	private static String query = "http://query.yahooapis.com/v1/public/yql?format=xml&q=select%20*%20from%20yahoo.finance.xchange%20where%20pair%20in%20(%22USDEUR%22,%20%22USDUAH%22)&env=store://datatables.org/alltableswithkeys";
 	
 	public static void main(String[] args){
-		String output = "";
 		try {
 			SAXFinanceHelper.performRequest(query,"");
 		} catch (IOException e) {
@@ -45,7 +44,8 @@ public class Main {
 			XMLReader reader = sp.getXMLReader();
 			SAXFinanceHelper financeHandler = new SAXFinanceHelper();
 			reader.setContentHandler(financeHandler);
-			reader.parse("file:///" + new File("tmp.xml").getAbsolutePath());
+			String path = new File("tmp.xml").getAbsolutePath();
+			reader.parse("file:///" + path);
 		} catch (IOException  e) {
 			System.err.println("File IO exception");
 			return;
@@ -62,6 +62,7 @@ class SAXFinanceHelper extends DefaultHandler {
 	    private Rate currentRate; 
 	    private String currentElement = "";
 	    private String currentElementValue = "";
+	    private List<String> rateFieldList;
 	    
 	    
 	    class Result{
@@ -119,40 +120,39 @@ class SAXFinanceHelper extends DefaultHandler {
 				return "Rate [id=" + id + ", name=" + name + ", rate=" + rate + ", date=" + date + ", time=" + time
 						+ ", ask=" + ask + ", bid=" + bid + "]";
 			}
-			
-			
 	    }
 	    
 	    @Override
 	    public void startDocument() throws SAXException {
 	    	result = new Result();
+	    	rateFieldList =  Arrays.asList(Rate.class.getDeclaredFields()).stream().map(t -> t.getName()).collect(Collectors.toList());
 	    }
 
 	    @Override
 		public void startElement(String uri, String localName, String qName, Attributes attributes)
 				throws SAXException {
+
 	    	currentElement = localName;
-	    	SimpleDateFormat attributeDate = new SimpleDateFormat("yyyy-MM-ddTHH:MM:ss");
+	    	SimpleDateFormat attributeDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:MM:ss'Z'");
 	    	
-	    	
-	    	if (attributes.getLength() > 0) {
+	    	if (currentElement.equals("query") && attributes.getLength() > 0) {
 	    		  for (int i = 0; i < attributes.getLength(); i++) {
 	    		    if(attributes.getQName(i).equals("yahoo:created")){
 	    		    	try {
-							result.queryDate = attributeDate.parse(attributes.getValue(i).replaceAll("Z", ""));
+							result.queryDate = attributeDate.parse(attributes.getValue(i));
+							break;
 						} catch (ParseException e) {
 							System.err.println("Cannot parse query date: " + attributes.getValue(i));
 							break;
 						}
-	    		    }
-	    		    System.out.println(" value: " + attributes.getValue(i));  
+	    		    } 
 	    		  }
 	    		}
 	    	
 	    	/*
 	    	 * New rate element -- if tag name matches the name of target class(case insensitive) 
 	    	 */
-	    	if(currentElement.toLowerCase().equals(Rate.class.getName().toLowerCase())){
+	    	if(currentElement.toLowerCase().equals(Rate.class.getSimpleName().toLowerCase())){
 	    		if(currentRate == null){
 	    			currentRate = new Rate();
 	    			currentRate.id = attributes.getValue("id");
@@ -165,7 +165,8 @@ class SAXFinanceHelper extends DefaultHandler {
 	    		/*
 	    		 * bypass element if it has not corresponded declared field in class
 	    		 */
-	    		if(!Arrays.asList(Rate.class.getDeclaredFields()).stream().map(t -> t.getName()).collect(Collectors.toList()).contains(currentElement)){
+	    		
+	    		if(!rateFieldList.contains(currentElement.toLowerCase())){
 	    			currentElement = "";
 	    		}	    		
 	    	}
@@ -181,11 +182,12 @@ class SAXFinanceHelper extends DefaultHandler {
 				return;
 			}
 	    	
-	    	for(Field f : Rate.class.getFields()){
+	    	for(Field f : Rate.class.getDeclaredFields()){
 	    		if(f.getName().toLowerCase().equals(currentElement.toLowerCase())){
 	    			try {
 	    				f.setAccessible(true);
 						f.set(currentRate, new String(ch, start, length));
+						break;
 					} catch (IllegalArgumentException | IllegalAccessException e) {
 						System.err.println("Cannot set value: \n" + currentElement + "\n" + currentElementValue);
 					}
@@ -230,7 +232,7 @@ class SAXFinanceHelper extends DefaultHandler {
 				file.createNewFile();
 			}
 	        try(PrintWriter pw = new PrintWriter(new FileOutputStream(file))){
-	        	pw.write(pw.toString());
+	        	pw.println(sb.toString());
 	        }
 	    }
 }
