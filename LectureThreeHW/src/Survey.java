@@ -1,18 +1,23 @@
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.text.html.HTMLDocument;
 
 @SuppressWarnings("serial")
 public class Survey extends HttpServlet{
 	private List<Responce> survey = new ArrayList<>();
-	private String htmlCore = "<html><head><meta charset=\"utf-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"TableStyle.css\"><title>Survey</title></head><body>%s</body></html>";
+	private String htmlCore = "<html><head><meta charset=\"utf-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"css/TableStyle.css\"><title>Survey</title></head><body>%s</body></html>";
 	
 	class Responce{
 		private String name;
@@ -32,6 +37,11 @@ public class Survey extends HttpServlet{
 		}		
 	}
 	
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		req.getRequestDispatcher("/survey.html").forward(req, resp);
+	}
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
