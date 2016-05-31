@@ -1,5 +1,5 @@
-Написать парсер для Yahoo Finance в
-режиме XML (format=xml)
+РќР°РїРёСЃР°С‚СЊ РїР°СЂСЃРµСЂ РґР»СЏ Yahoo Finance РІ
+СЂРµР¶РёРјРµ XML (format=xml)
 
 <?xml version="1.0" encoding="UTF-8"?>
 <query xmlns:yahoo="http://www.yahooapis.com/v1/base.rng" yahoo:count="2" yahoo:created="2016-05-27T11:58:27Z" yahoo:lang="en-US">
