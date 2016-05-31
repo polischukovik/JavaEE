@@ -27,18 +27,18 @@ public class Schema {
     }
     
     static class Rate{
-    	String id;
-    	String name;
+    	private String id;
+    	private String name;
     	@DataFormat(dataFormat="double")
-    	Double rate;
+    	private Double rate;
     	@DataFormat(dataFormat="date")
-    	Date date;
+    	private Date date;
     	@DataFormat(dataFormat="time")
-    	Date time;
+    	private Date time;
     	@DataFormat(dataFormat="double")
-    	Double ask;
+    	private Double ask;
     	@DataFormat(dataFormat="double")
-    	Double bid;
+    	private Double bid;
     	
     	public Rate(){}
 

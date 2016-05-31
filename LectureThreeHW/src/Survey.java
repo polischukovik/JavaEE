@@ -15,12 +15,12 @@ public class Survey extends HttpServlet{
 	private String htmlCore = "<html><head><meta charset=\"utf-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"TableStyle.css\"><title>Survey</title></head><body>%s</body></html>";
 	
 	class Responce{
-		String name;
-		String surname;
-		int age;
-		String gender;
-		int like;
-		String from;
+		private String name;
+		private String surname;
+		private int age;
+		private String gender;
+		private int like;
+		private String from;
 		public Responce(String name, String surname, int age, String gender, int like, String from) {
 			super();
 			this.name = name;

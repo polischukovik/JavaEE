@@ -98,8 +98,15 @@ class SAXFinanceHelper extends DefaultHandler {
 	    	 */
 	    	if(currentElement.equals(Schema.Rate.class.getSimpleName().toLowerCase()) && currentRate == null){
 	    		if(currentRate == null){
-	    			currentRate = new Schema.Rate();
-	    			currentRate.id = attributes.getValue("id");
+	    			currentRate = new Schema.Rate();	    			
+	    			try {
+	    				Field id = Schema.Rate.class.getDeclaredField("id");
+		    			id.setAccessible(true);
+						id.set(currentRate, attributes.getValue("id"));
+					} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+						System.err.println("Cannot set field");
+						e.printStackTrace();
+					}
 	    		}else{
 	    			System.err.println(String.format("Exception while parsing: tag %s is not closed", currentElement));
 	    			return;
