@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 @SuppressWarnings("serial")
 public class Survey extends HttpServlet{
 	private List<Responce> survey = new ArrayList<>();
-	private String htmlCore = "<html><head><meta charset=\"ISO-8859-1\"><title>Survey</title></head><body><table border=\"1\">%s</table></body></html>";
+	private String htmlCore = "<html><head><meta charset=\"utf-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"TableStyle.css\"><title>Survey</title></head><body>%s</body></html>";
 	
 	class Responce{
 		String name;
@@ -44,12 +44,17 @@ public class Survey extends HttpServlet{
 				req.getParameter("from")));
 		
 		PrintWriter pw = resp.getWriter();
-		String table = "<tr><td>Name</td><td>Surname</td><td>Age</td><td>Gender</td><td>Like</td><td>From</td></tr>";
+		String table = "<table class=\"rwd-table\"><tr><th>Name</th><th>Surname</th><th>Age</th><th>Gender</th><th>Like</th><th>From</th></tr>";
 		for(Responce r : survey){
-			table += String.format("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+			table += String.format("<tr><td data-th=\"Name\">%s</td>"
+									+ "<td data-th=\"Surname\">%s</td>"
+									+ "<td data-th=\"Age\">%s</td>"
+									+ "<td data-th=\"Gender\">%s</td>"
+									+ "<td data-th=\"Like\">%s</td>"
+									+ "<td data-th=\"From\">%s</td></tr>",
 					r.name, r.surname, r.age, r.gender, r.like, r.from);
 		}
-		table += String.format("<tr><td><b>Total</b></td><td><b>Responses:%d</b></td><td><b>avg: %.2f </b></td><td></td><td><b>%d</b></td><td></td></tr>",
+		table += String.format("<tr><td><b>Total</b></td><td><b>Responses:%d</b></td><td><b>avg: %.2f </b></td><td></td><td><b>%d</b></td><td></td></tr></table>",
 				survey.size(),survey.stream().mapToInt(t -> t.age).average().getAsDouble(), survey.stream().mapToInt(t -> t.like).sum());
 		pw.println(String.format(htmlCore, table));
 		
