@@ -4,14 +4,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,133 +27,78 @@ public class Main {
 	private static String query = "http://query.yahooapis.com/v1/public/yql?format=xml&q=select%20*%20from%20yahoo.finance.xchange%20where%20pair%20in%20(%22USDEUR%22,%20%22USDUAH%22)&env=store://datatables.org/alltableswithkeys";
 	
 	public static void main(String[] args){
+		String tmpXML = "tmpFile.xml";
 		try {
-			SAXFinanceHelper.performRequest(query,"");
+			SAXFinanceHelper.performRequest(query, tmpXML);
 		} catch (IOException e) {
 			System.err.println("Cannot obtain responce:");
 			e.printStackTrace();
 		}
 		
-		SAXParserFactory spf = SAXParserFactory.newInstance();
-		spf.setNamespaceAware(true);
-		
-		try {
-			SAXParser sp = spf.newSAXParser();
-			
-			XMLReader reader = sp.getXMLReader();
-			SAXFinanceHelper financeHandler = new SAXFinanceHelper();
-			reader.setContentHandler(financeHandler);
-			String path = new File("tmp.xml").getAbsolutePath();
-			reader.parse("file:///" + path);
-		} catch (IOException  e) {
-			System.err.println("File IO exception");
-			return;
-		} catch (ParserConfigurationException | SAXException e) {
-			System.err.println("That SAX!:");
-			return;
-		}
+		Schema.Result result = new SAXFinanceHelper().parseFinanceXML(new File(tmpXML).getAbsolutePath());
+		System.out.println(result);
 	}	
 }
 	
 class SAXFinanceHelper extends DefaultHandler {
-	    
-	    public Result result;
-	    private Rate currentRate; 
-	    private String currentElement = "";
-	    private String currentElementValue = "";
-	    private List<String> rateFieldList;
-	    
-	    
-	    class Result{
-	    	Date queryDate;
-	    	List<Rate> rates;
-
-			public Result() {
-				this.rates = new ArrayList<>();
-			}	    	
-			
-			public void add(Rate r){
-				rates.add(r);
+		private List<String> rateFieldList;
+	    private SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yyyy");
+	    private SimpleDateFormat timeFormat = new SimpleDateFormat("h:mma");
+	
+		private Schema.Result result;
+	    private Schema.Rate currentRate; 	    
+	    private String currentElement = "";	    
+		
+		public Schema.Result parseFinanceXML(String path){
+			try {
+				SAXParserFactory spf = SAXParserFactory.newInstance();
+				spf.setNamespaceAware(true);
+				SAXParser sp = spf.newSAXParser();
+				
+				XMLReader reader = sp.getXMLReader();
+				reader.setContentHandler(this);
+				reader.parse("file:///" + path);
+				return result;
+			} catch (IOException  e) {
+				System.err.println("File IO exception");
+			} catch (ParserConfigurationException | SAXException e) {
+				System.err.println("That SAX!:");
 			}
-
-			@Override
-			public String toString() {
-				return "Result queryDate=" + queryDate + ", rates: " + rates;
-			}
-	    }
-	    
-	    class Rate{
-	    	String id;
-	    	String name;
-	    	Double rate;
-	    	Date date;
-	    	Date time;
-	    	Double ask;
-	    	Double bid;
-	    	
-	    	public Rate(){}
-	    	
-			public Rate(String id, String name, Double rate, Date date, Date time, Double ask, Double bid) {
-				this.id = id;
-				this.name = name;
-				this.rate = rate;
-				this.date = date;
-				this.time = time;
-				this.ask = ask;
-				this.bid = bid;
-			}
-			public Rate(String id, String name, String rate, String date, String time, String ask, String bid) throws ParseException {
-				SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yyyy");
-				SimpleDateFormat timeFormat = new SimpleDateFormat("h:mma");
-				this.id = id;
-				this.name = name;
-				this.rate = Double.valueOf(rate);
-				this.date = dateFormat.parse(date);
-				this.time = timeFormat.parse(time);
-				this.ask = Double.valueOf(ask);
-				this.bid = Double.valueOf(bid);
-			}
-
-			@Override
-			public String toString() {
-				return "Rate [id=" + id + ", name=" + name + ", rate=" + rate + ", date=" + date + ", time=" + time
-						+ ", ask=" + ask + ", bid=" + bid + "]";
-			}
-	    }
+			return result;
+		}
 	    
 	    @Override
 	    public void startDocument() throws SAXException {
-	    	result = new Result();
-	    	rateFieldList =  Arrays.asList(Rate.class.getDeclaredFields()).stream().map(t -> t.getName()).collect(Collectors.toList());
+	    	result = new Schema.Result();
+	    	rateFieldList =  Arrays.asList(Schema.Rate.class.getDeclaredFields()).stream().map(t -> t.getName()).collect(Collectors.toList());
 	    }
 
 	    @Override
 		public void startElement(String uri, String localName, String qName, Attributes attributes)
 				throws SAXException {
-
 	    	currentElement = localName;
-	    	SimpleDateFormat attributeDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:MM:ss'Z'");
+	    	SimpleDateFormat attributeDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 	    	
-	    	if (currentElement.equals("query") && attributes.getLength() > 0) {
-	    		  for (int i = 0; i < attributes.getLength(); i++) {
-	    		    if(attributes.getQName(i).equals("yahoo:created")){
-	    		    	try {
-							result.queryDate = attributeDate.parse(attributes.getValue(i));
-							break;
-						} catch (ParseException e) {
-							System.err.println("Cannot parse query date: " + attributes.getValue(i));
-							break;
-						}
-	    		    } 
-	    		  }
+ 	    	if (currentElement.equals("query") && attributes.getLength() > 0) {
+	    		for (int i = 0; i < attributes.getLength(); i++) {
+	    			if(attributes.getQName(i).equals("yahoo:created")){
+	    				try {
+	    					result.queryDate = attributeDate.parse(attributes.getValue(i));
+	    					break;
+	    				} catch (ParseException e) {
+	    					System.err.println("Cannot parse query date: " + attributes.getValue(i));
+	    					break;
+	    				}
+	    			}
 	    		}
+	    	}
 	    	
 	    	/*
 	    	 * New rate element -- if tag name matches the name of target class(case insensitive) 
 	    	 */
-	    	if(currentElement.toLowerCase().equals(Rate.class.getSimpleName().toLowerCase())){
+	    	if(currentElement.equals(Schema.Rate.class.getSimpleName().toLowerCase()) && currentRate == null){
 	    		if(currentRate == null){
-	    			currentRate = new Rate();
+	    			currentRate = new Schema.Rate();
 	    			currentRate.id = attributes.getValue("id");
 	    		}else{
 	    			System.err.println(String.format("Exception while parsing: tag %s is not closed", currentElement));
@@ -164,32 +108,47 @@ class SAXFinanceHelper extends DefaultHandler {
 	    	}else{
 	    		/*
 	    		 * bypass element if it has not corresponded declared field in class
-	    		 */
-	    		
+	    		 */	    		
 	    		if(!rateFieldList.contains(currentElement.toLowerCase())){
 	    			currentElement = "";
 	    		}	    		
-	    	}
-	    	
+	    	}	    	
 		}
 	    
 	    @Override
 		public void characters(char[] ch, int start, int length) throws SAXException {
-			/*
+	    	/*
 			 * No target elements for text -- bypass
 			 */
 	    	if(currentElement.equals("")){
 				return;
 			}
 	    	
-	    	for(Field f : Rate.class.getDeclaredFields()){
+	    	for(Field f : Schema.Rate.class.getDeclaredFields()){
 	    		if(f.getName().toLowerCase().equals(currentElement.toLowerCase())){
 	    			try {
+	    				Annotation anotation = f.getAnnotation(DataFormat.class);
 	    				f.setAccessible(true);
-						f.set(currentRate, new String(ch, start, length));
-						break;
+	    				if(anotation == null){
+	    					f.set(currentRate, new String(ch, start, length));
+							break;
+	    				}
+	    				else if(((DataFormat) anotation).dataFormat().equals("date")){
+	    					f.set(currentRate, dateFormat.parse(new String(ch, start, length)));
+							break;
+	    				}
+	    				else if(((DataFormat) anotation).dataFormat().equals("time")){
+	    					f.set(currentRate, timeFormat.parse(new String(ch, start, length)));
+							break;
+	    				}	
+	    				else if(((DataFormat) anotation).dataFormat().equals("double")){
+	    					f.set(currentRate, Double.valueOf(new String(ch, start, length)));
+							break;
+	    				}	
 					} catch (IllegalArgumentException | IllegalAccessException e) {
-						System.err.println("Cannot set value: \n" + currentElement + "\n" + currentElementValue);
+						System.err.println("Cannot set value: \n" + currentElement + "\n" + new String(ch, start, length) + e);
+					} catch (ParseException e) {
+						System.err.println("Cannot set value: \n" + currentElement + "\n" + new String(ch, start, length) + e);
 					}
 	    		}
 	    	}	    	
@@ -197,7 +156,7 @@ class SAXFinanceHelper extends DefaultHandler {
 	    
 	    @Override
 		public void endElement(String uri, String localName, String qName) throws SAXException {
-	    	if(currentElement.equals(Rate.class.getName().toLowerCase())){
+	    	if(localName.equals(Schema.Rate.class.getSimpleName().toLowerCase())){
 	    		if(currentRate != null){
 	    			result.add(currentRate);
 	    			currentRate = null;
@@ -227,7 +186,7 @@ class SAXFinanceHelper extends DefaultHandler {
 		            connection.disconnect();
 		    }
 			
-			File file = new File("tmp.xml");
+			File file = new File(tmpFile);
 			if(!file.exists()){
 				file.createNewFile();
 			}
