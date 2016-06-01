@@ -67,7 +67,7 @@ class Trains{
 									&& t.getDeparture().before(TrainXMLHelper.timeFormat.parse(timeTo));
 						} catch (Exception e) {
 							System.out.println("Cannot parse date" + timeFrom);
-							System.out.println(t.getDeparture());
+							e.printStackTrace();
 						}
 						return false;					
 					}						
