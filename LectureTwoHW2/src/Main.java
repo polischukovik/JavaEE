@@ -7,11 +7,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 class JSON{
-	String name;
-	String surname;
-	String[] phones;
-	String[] sites;
-	Address	address;
+	private String name;
+	private String surname;
+	private String[] phones;
+	private String[] sites;
+	private Address	address;
 	@Override
 	public String toString() {
 		return "JSON [name=" + name + ", surname=" + surname + ", phones=" + Arrays.toString(phones) + ", sites="
@@ -21,9 +21,9 @@ class JSON{
 }
 
 class Address{
-	String country;
-	String city;
-	String street;
+	private String country;
+	private String city;
+	private String street;
 	@Override
 	public String toString() {
 		return "Address [country=" + country + ", city=" + city + ", street=" + street + "]";

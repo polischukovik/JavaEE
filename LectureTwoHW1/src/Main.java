@@ -50,7 +50,7 @@ class Trains{
 	private Set<Train> trains = new HashSet<>();
 	
 	public Set<Train> getTrains(){
-		return new HashSet<>(trains);		
+		return new HashSet<Train>(trains);		
 	}
 	
 	public void add(Train train){
@@ -66,7 +66,7 @@ class Trains{
 									&& t.getDeparture().after(TrainXMLHelper.timeFormat.parse(timeFrom))
 									&& t.getDeparture().before(TrainXMLHelper.timeFormat.parse(timeTo));
 						} catch (Exception e) {
-							System.out.println("Cannot parse date");
+							System.out.println("Cannot parse date" + timeFrom);
 							System.out.println(t.getDeparture());
 						}
 						return false;					
@@ -101,6 +101,11 @@ class Train{
 	public Train(){		
 	}
 	
+	@Override
+	public int hashCode() {
+		return id;
+	}
+
 	public Train(int id, String from, String to, String date, String departure) {
 		super();
 		this.id = id;
