@@ -33,23 +33,23 @@ public class Message implements Serializable {
 				.append("] ").append(text).toString();
 	}
 
-	public int send(String url) throws IOException {
-		URL obj = new URL(url);
-		HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
-		
-		conn.setRequestMethod("POST");
-		conn.setDoOutput(true);
-	
-		OutputStream os = conn.getOutputStream();
-		try {
-			String json = toJSON();
-			os.write(json.getBytes());
-			
-			return conn.getResponseCode();
-		} finally {
-			os.close();
-		}
-	}
+//	public int send(String url) throws IOException {
+//		URL obj = new URL(url);
+//		HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
+//		
+//		conn.setRequestMethod("POST");
+//		conn.setDoOutput(true);
+//	
+//		OutputStream os = conn.getOutputStream();
+//		try {
+//			String json = toJSON();
+//			os.write(json.getBytes());
+//			
+//			return conn.getResponseCode();
+//		} finally {
+//			os.close();
+//		}
+//	}
 	
 	public Date getDate() {
 		return date;

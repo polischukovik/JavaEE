@@ -4,22 +4,14 @@ xmlns="http://java.sun.com/xml/ns/javaee"
 xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+
 	<servlet>
-		<servlet-name>GetList</servlet-name>
-		<servlet-class>ua.kiev.polischukovik.GetListServlet</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>GetList</servlet-name>
-		<url-pattern>/get</url-pattern>
-	</servlet-mapping>
-	
-	<servlet>
-		<servlet-name>Add</servlet-name>
+		<servlet-name>Chat</servlet-name>
 		<servlet-class>ua.kiev.polischukovik.MessageServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>Add</servlet-name>
-		<url-pattern>/add</url-pattern>
+		<servlet-name>Chat</servlet-name>
+		<url-pattern>/chat</url-pattern>
 	</servlet-mapping>
 	
 	<welcome-file-list>

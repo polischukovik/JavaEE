@@ -2,27 +2,33 @@ package ua.kiev.polischukovik;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import javax.servlet.ServletOutputStream;
 
+import com.sun.org.apache.xalan.internal.xsltc.trax.OutputSettings;
+
 public class MessageIO {
-	public static String extractMessage(InputStream is) throws IOException{
+	public static String formPackage(InputStream inputStream) throws IOException{
 		/*
 		 * First int in message is message length
 		 */
-		byte[] intBuff = new byte[4];
-		is.read(intBuff, 0, 4);		
+		byte[] intBuff = new byte[Integer.BYTES];
+		inputStream.read(intBuff, 0, Integer.BYTES);		
 		int messageSize = ByteBuffer.wrap(intBuff).getInt();
 		
 		byte[] messageBuff = new byte[messageSize];
-		is.read(messageBuff, 0, messageSize);
+		inputStream.read(messageBuff, 0, messageSize);
 		return new String(messageBuff);
 	}
 
-	public static void compressMessage(String json, ServletOutputStream outputStream) {
-		// TODO Auto-generated method stub
-		
+	public static void sendMessage(String json, ServletOutputStream outputStream) throws IOException {
+		/*
+		 * create header containing size of transaction
+		 */
+		outputStream.write(ByteBuffer.allocate(Integer.BYTES).putInt(json.length()).array());
+		outputStream.write(json.getBytes());
 	}
 
 }
