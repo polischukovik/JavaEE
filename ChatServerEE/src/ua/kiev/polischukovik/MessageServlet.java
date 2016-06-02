@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 public class MessageServlet extends HttpServlet {
 
 	private MessageList msgList = MessageList.getInstance();
+	private Users users = Users.getInstance();
+	private Rooms rooms = Rooms.getInstance();
 	
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException 
