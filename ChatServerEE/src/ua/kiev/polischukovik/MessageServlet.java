@@ -51,7 +51,7 @@ public class MessageServlet extends HttpServlet {
 						returnBadRequest(req, resp);
 					}else{
 						User userObj = users.getUserByName(user);
-						if(userObj == null){
+						if(userObj == null && user.length() > 0 ){
 							users.addUser(user);
 						}else{
 							returnBadRequest(req, resp);
