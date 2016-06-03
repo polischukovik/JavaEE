@@ -11,7 +11,7 @@ import com.google.gson.GsonBuilder;
 public class Room implements Serializable {
 	
 	private String name;
-	private int numberOfParticipants = 0;
+	private transient int numberOfParticipants = 0;
 	private transient boolean isPrivate;
 	private transient List<User> participants = new ArrayList<>();
 	private transient List<Message> list = new ArrayList<>();
@@ -29,22 +29,22 @@ public class Room implements Serializable {
 	/*
 	 * Constructor for PRIVATE room
 	 */
-	public Room(User initiator, User adressee) {
-		this.name = initiator.getName() + "#" + adressee.getName();
+	public Room(User initiator, User user) {
+		this.name = null;
 		participants.add(initiator);
-		participants.add(adressee);
+		participants.add(user);
 		numberOfParticipants = participants.size();
 		this.isPrivate = true;
 	}
 
 	public synchronized String getMessageJSON(int n) {
-		List<Message> res = list.subList(n, list.size());
-		
-		if (res.size() > 0) {
-			Gson gson = new GsonBuilder().create();
-			return gson.toJson(res.toArray());
-		} else
+		if(n > list.size()){
 			return null;
+		}
+		return new GsonBuilder().
+				setPrettyPrinting().
+				create().
+				toJson(list.subList(n, list.size()).toArray());		
 	}
 	
 	public synchronized void deleteParticipant(User user) {
@@ -70,14 +70,7 @@ public class Room implements Serializable {
 	public boolean isPrivate() {
 		return isPrivate;
 	}
-
-	/*
-	 * Return JSON rooms name list
-	 */
-	public String getRoomJSON() {
-		return new GsonBuilder().create().toJson(this);
-	}	
-
+	
 	@Override
 	public String toString() {
 		return "Room [name=" + name + ", isPrivate=" + isPrivate + ", participants=" + participants.stream().map(t -> t.getName()).collect(Collectors.joining(",")) + ", numberOfParticipants=" + numberOfParticipants + "]";
@@ -92,7 +85,35 @@ public class Room implements Serializable {
 		}
 		return participants.get(0);
 	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((participants == null) ? 0 : participants.hashCode());
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Room other = (Room) obj;	
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (participants == null) {
+			if (other.participants != null)
+				return false;
+		} else if (!participants.equals(other.participants))
+			return false;
+		return true;
+	}
 	
 	
-
 }

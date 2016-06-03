@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class User implements Serializable{
+	
 	private String name;
 	private UserStatus status;	
 
@@ -27,10 +28,9 @@ public class User implements Serializable{
 		this.status = status;
 	}
 
-	public String toJSON() {
-		Gson gson = new GsonBuilder().create();
-		return gson.toJson(this);
-	}
+//	public User toJSON() {
+//		return this;
+//	}
 
 	@Override
 	public int hashCode() {

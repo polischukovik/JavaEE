@@ -24,12 +24,12 @@ public class Rooms {
 	 */
 	public synchronized String getPublicRoomsJSON() {
 		if (list.size() > 0) {
-			return new GsonBuilder().create().toJson(list.values().stream().filter(t -> !t.isPrivate()).toArray());
+			return new GsonBuilder().setPrettyPrinting().create().toJson(list.values().stream().filter(t -> !t.isPrivate()).toArray());
 		} else{
 			return null;
 		}
 	}	
-	
+
 	/*
 	 * parameters type: "room", operation: "addPublic": name, initiator	 
 	 */
@@ -41,8 +41,8 @@ public class Rooms {
 	/*
 	 * parameters type: "room", operation: "remPublic": name, creator	 
 	 */
-	public synchronized void removePublicRoom(String name){
-		list.remove(name);
+	public synchronized void removePublicRoom(Room name){
+		list.values().remove(name);
 	}
 	
 	/*
@@ -70,7 +70,7 @@ public class Rooms {
 		if(room.getNumberOfParticipants() == 0){
 			list.remove(room);
 		}
-	}	
+	}		
 	
 	/*
 	 * Gets JSON room list
@@ -78,7 +78,7 @@ public class Rooms {
 	 */
 	public synchronized String getPrivateRoomsJSON(User user) {
 		if (list.size() > 0) {
-			return new GsonBuilder().create().toJson(list.values().stream().filter(t -> t.containsParticipant(user)).toArray());
+			return new GsonBuilder().setPrettyPrinting().create().toJson(list.values().stream().filter(t -> t.containsParticipant(user)).toArray());
 		} else{
 			return null;
 		}
@@ -104,11 +104,8 @@ public class Rooms {
 	 * Gets JSON message list from room since n
 	 * parameters type: "room", operation: "addMsg": roomName, MsgJSON	 
 	 */
-	public synchronized void addRoomsMessages(String room, Message message) {
-		Room roomObj = list.get(room);
-		if (roomObj != null) {
-			roomObj.addMessage(message);
-		}
+	public synchronized void addRoomsMessages(Room room, Message message) {
+		room.addMessage(message);
 	}
 	
 	/*
@@ -120,6 +117,10 @@ public class Rooms {
 			return roomObj.getCreator();
 		}
 		return null;
+	}
+	
+	public Room getRoomByName(String name){
+		return list.get(name);
 	}
 
 }

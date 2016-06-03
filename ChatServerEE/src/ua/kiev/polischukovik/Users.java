@@ -24,8 +24,8 @@ public class Users {
 	/*	
 	 * parameters type: "login", operation: "remUser":	 userName
 	 */
-	public synchronized void removeUser(String name){		
-		list.remove(name);
+	public synchronized void removeUser(User name){		
+		list.values().remove(name);
 	}
 	
 	/*	
@@ -47,7 +47,7 @@ public class Users {
 	 */
 	public String getVisableUsersJSON(){
 		if (list.size() > 0) {
-			return new GsonBuilder().create().toJson(list.values().stream().filter(t -> t.getStatus() != UserStatus.INVISIBLE).map(n -> n.toJSON()).toArray());
+			return new GsonBuilder().setPrettyPrinting().create().toJson(list.values().stream().filter(t -> t.getStatus() != UserStatus.INVISIBLE).toArray());
 		}
 		else{
 			return null;

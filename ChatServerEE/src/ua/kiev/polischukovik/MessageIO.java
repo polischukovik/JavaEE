@@ -23,7 +23,7 @@ public class MessageIO {
 		return new String(messageBuff);
 	}
 
-	public static void sendMessage(String json, ServletOutputStream outputStream) throws IOException {
+	public static void sendMessage(String json, OutputStream outputStream) throws IOException {
 		/*
 		 * create header containing size of transaction
 		 */
