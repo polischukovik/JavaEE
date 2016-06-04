@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class MessageServlet extends HttpServlet {
+	private static final int MAX_PARAM_LENGTH = 200;
 
 	private Users users = Users.getInstance();
 	private Rooms rooms = Rooms.getInstance();
@@ -51,7 +52,7 @@ public class MessageServlet extends HttpServlet {
 						returnBadRequest(req, resp);
 					}else{
 						User userObj = users.getUserByName(user);
-						if(userObj == null && user.length() > 0 ){
+						if(userObj == null){
 							users.addUser(user);
 						}else{
 							returnBadRequest(req, resp);
@@ -108,7 +109,7 @@ public class MessageServlet extends HttpServlet {
 						if(initiatorObj == null){
 							returnBadRequest(req, resp);
 						}else{
-							Room room = rooms.getRoomByName(roomName);
+							Room room = rooms.getPublicRoomByName(roomName);
 							if(room == null){
 								returnBadRequest(req, resp);
 							}else{
@@ -126,7 +127,7 @@ public class MessageServlet extends HttpServlet {
 					if(!(checkParameter(roomName) && checkParameter(n))){
 						returnBadRequest(req, resp);
 					}else{
-						Room room = rooms.getRoomByName(roomName);
+						Room room = rooms.getPublicRoomByName(roomName);
 						if(room == null){
 							returnBadRequest(req, resp);
 						}else{
@@ -149,12 +150,12 @@ public class MessageServlet extends HttpServlet {
 						}						
 					}
 				}else if(op.equals("addMsg")){
-					String roomName = req.getParameter("name");
+					String roomName = req.getParameter("roomName");
 					String message = req.getParameter("message");
 					if(!(checkParameter(roomName) && checkParameter(message))){
 						returnBadRequest(req, resp);
 					}else{
-						Room room = rooms.getRoomByName(roomName);
+						Room room = rooms.getPublicRoomByName(roomName);
 						if(room == null){
 							returnBadRequest(req, resp);
 						}else{
@@ -163,7 +164,7 @@ public class MessageServlet extends HttpServlet {
 								returnBadRequest(req, resp);
 							}else{
 								rooms.addRoomsMessages(room, messageObj);
-							}
+							}									
 						}						
 					}
 				}else if(op.equals("queryPrivate")){
@@ -175,8 +176,13 @@ public class MessageServlet extends HttpServlet {
 						if(userObj == null){
 							returnBadRequest(req, resp);
 						}else{
-							rooms.getPrivateRoomsJSON(userObj);
-							resp.setStatus(HttpServletResponse.SC_OK);
+							try(OutputStream os = resp.getOutputStream()){
+								MessageIO.sendMessage(rooms.getPrivateRoomsJSON(userObj), os);	
+								resp.setStatus(HttpServletResponse.SC_OK);								
+							}
+							catch(IOException e){
+								returnInternalError(resp);
+							}
 						}	
 					}
 				}else if(op.equals("addPrivate")){
@@ -206,7 +212,12 @@ public class MessageServlet extends HttpServlet {
 						if(initiatorObj == null || userObj == null){
 							returnBadRequest(req, resp);
 						}else{
-							rooms.deletePrivateRoom(initiatorObj, userObj);
+							Room room = rooms.getPrivateRoomByParticipants(initiatorObj, userObj);
+							if(room == null){
+								returnBadRequest(req, resp);
+							}else{
+								rooms.removePublicRoom(room);
+							}
 						}
 					}
 				}
@@ -240,7 +251,7 @@ public class MessageServlet extends HttpServlet {
 	}
 	
 	private boolean checkParameter(String value){
-		return value != null && !value.equals("");
+		return value != null && !value.equals("") && value.length() < MAX_PARAM_LENGTH;
 	}
 	
 	public void doPost(HttpServletRequest req, HttpServletResponse resp)

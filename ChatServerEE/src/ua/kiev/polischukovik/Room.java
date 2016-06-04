@@ -59,6 +59,14 @@ public class Room implements Serializable {
 		return participants.contains(user);
 	}
 	
+	public synchronized User returnOtherone(User user) {
+		if(participants.indexOf(user) == 0){
+			return participants.get(1);
+		}else{
+			return participants.get(0);
+		}
+	}
+	
 	public int getNumberOfParticipants() {
 		return numberOfParticipants;
 	}

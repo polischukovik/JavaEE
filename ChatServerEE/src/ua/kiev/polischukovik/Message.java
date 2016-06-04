@@ -11,10 +11,17 @@ import com.google.gson.GsonBuilder;
 public class Message implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private Date date = new Date();
-	private User from;
+	private Date date;
+	private String from;
 	private String text;
 	
+	public Message(Date date, String from, String text) {
+		super();
+		this.date = date;
+		this.from = from;
+		this.text = text;
+	}
+
 	public String toJSON() {
 		Gson gson = new GsonBuilder().create();
 		return gson.toJson(this);
@@ -39,11 +46,11 @@ public class Message implements Serializable {
 		this.date = date;
 	}
 
-	public User getFrom() {
+	public String getFrom() {
 		return from;
 	}
 
-	public void setFrom(User from) {
+	public void setFrom(String from) {
 		this.from = from;
 	}
 	

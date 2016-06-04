@@ -1,14 +1,15 @@
 package ua.kiev.polischukovik;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gson.GsonBuilder;
 
 public class Rooms {
 	
 	private static final Rooms rooms = new Rooms();
-	private Map<String,Room> list = new HashMap<>();
+	private List<Room> list = new ArrayList<>();
 	
 	private Rooms(){}
 	
@@ -24,7 +25,7 @@ public class Rooms {
 	 */
 	public synchronized String getPublicRoomsJSON() {
 		if (list.size() > 0) {
-			return new GsonBuilder().setPrettyPrinting().create().toJson(list.values().stream().filter(t -> !t.isPrivate()).toArray());
+			return new GsonBuilder().setPrettyPrinting().create().toJson(list.stream().filter(t -> !t.isPrivate()).toArray());
 		} else{
 			return null;
 		}
@@ -35,14 +36,14 @@ public class Rooms {
 	 */
 	public synchronized void addPublicRoom(String name, User initiator){
 		Room room = new Room(name, initiator);
-		list.put(room.getName(), room); //add initiator the one who can delete room
+		list.add(room); //add initiator the one who can delete room
 	}
 	
 	/*
 	 * parameters type: "room", operation: "remPublic": name, creator	 
 	 */
 	public synchronized void removePublicRoom(Room name){
-		list.values().remove(name);
+		list.remove(name);
 	}
 	
 	/*
@@ -54,22 +55,15 @@ public class Rooms {
 	 */
 	public synchronized void addPrivateRoom(User initiator, User adressee){
 		Room room = new Room(initiator, adressee);
-		list.put(room.getName(), room);
+		list.add(room);
 	}
 	
 	/*
 	 * parameters type: "room", operation: "remPublic": userName, room
 	 *  +getPublicRoomCreator(String room)
 	 */
-	public synchronized void deletePrivateRoom(User you, User anotherone){
-		Room room = list.get(new Room(you, anotherone).getName());
-		if(room == null){
-			return;
-		}
-		room.deleteParticipant(you);
-		if(room.getNumberOfParticipants() == 0){
-			list.remove(room);
-		}
+	public synchronized void removePrivate(User you, User anotherone){
+		list.remove(new Room(you, anotherone));
 	}		
 	
 	/*
@@ -78,7 +72,14 @@ public class Rooms {
 	 */
 	public synchronized String getPrivateRoomsJSON(User user) {
 		if (list.size() > 0) {
-			return new GsonBuilder().setPrettyPrinting().create().toJson(list.values().stream().filter(t -> t.containsParticipant(user)).toArray());
+			List<User> u = list.stream()
+							.filter(t -> t.isPrivate() && t.containsParticipant(user))
+							.map(t -> t.returnOtherone(user))
+							.collect(Collectors.toList());
+			return new GsonBuilder()
+							.setPrettyPrinting()
+							.create()
+							.toJson(u);
 		} else{
 			return null;
 		}
@@ -92,7 +93,7 @@ public class Rooms {
 	 * parameters type: "room", operation: "queryMsg": roomName, n	 
 	 */
 	public synchronized String getRoomsMessagesJSON(String room, int n) {
-		Room roomObj = list.get(room);
+		Room roomObj = getPublicRoomByName(room);
 		if (roomObj != null) {
 			return roomObj.getMessageJSON(n);
 		} else{
@@ -112,15 +113,25 @@ public class Rooms {
 	 * MISC
 	 */
 	public User getPublicRoomCreator(String room){
-		Room roomObj = list.get(room);
+		Room roomObj = getPublicRoomByName(room);
 		if(roomObj != null ){
 			return roomObj.getCreator();
 		}
 		return null;
 	}
 	
-	public Room getRoomByName(String name){
-		return list.get(name);
+	public Room getPublicRoomByName(String name){
+		Room roomObj = null;
+		try{
+			roomObj= list.stream().filter(t -> !t.isPrivate() && t.getName().equals(name)).collect(Collectors.toList()).get(0);
+		}catch(NullPointerException e){
+			System.out.println(e);
+		}
+		return roomObj;
+	}
+	
+	public Room getPrivateRoomByParticipants(User initiator, User user){
+		return new Room(initiator, user);
 	}
 
 }

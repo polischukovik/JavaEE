@@ -28,9 +28,9 @@ public class User implements Serializable{
 		this.status = status;
 	}
 
-//	public User toJSON() {
-//		return this;
-//	}
+	public String toJSON() {
+		return new GsonBuilder().setPrettyPrinting().create().toJson(this);
+	}
 
 	@Override
 	public int hashCode() {
