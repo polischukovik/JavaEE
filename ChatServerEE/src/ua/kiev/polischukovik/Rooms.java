@@ -121,17 +121,25 @@ public class Rooms {
 	}
 	
 	public Room getPublicRoomByName(String name){
-		Room roomObj = null;
-		try{
-			roomObj= list.stream().filter(t -> !t.isPrivate() && t.getName().equals(name)).collect(Collectors.toList()).get(0);
-		}catch(NullPointerException e){
-			System.out.println(e);
-		}
+		Room roomObj = null;		
+		List<Room> rooms = list.stream()
+				.filter(t -> !t.isPrivate() && t.getName().equals(name))
+				.collect(Collectors.toList());
+		if(rooms.size() > 0){
+			roomObj = rooms.get(0);
+		}			
 		return roomObj;
 	}
 	
 	public Room getPrivateRoomByParticipants(User initiator, User user){
-		return new Room(initiator, user);
+		int index = list.indexOf(new Room(initiator, user));
+		int indexR = list.indexOf(new Room(user, initiator));
+		if(index != -1 ){
+			return list.get(index);
+		}else if(indexR != -1){
+			return list.get(indexR);
+		}else{
+			return null;
+		}
 	}
-
 }

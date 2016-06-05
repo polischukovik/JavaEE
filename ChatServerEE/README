@@ -1,0 +1,21 @@
+type=user
+operation=query
+http://localhost:8080/ChatServerEE/chat?type=user&operation=query
+operation=addUser(name=NAME)
+http://localhost:8080/ChatServerEE/chat?type=user&operation=addUsr&name=Lois
+operation=remUser(name=NAME)
+http://localhost:8080/ChatServerEE/chat?type=user&operation=remUsr&name=Lois
+
+type=room
+operation=queryPublic
+http://localhost:8080/ChatServerEE/chat?type=rooms&operation=queryPublic
+operation=addPublic(name=NAME, initiator=NAME)
+http://localhost:8080/ChatServerEE/chat?type=rooms&operation=addPublic&name=New%20room&initiator=Alex
+operation=remPublic(name=NAME, initiator=NAME)
+http://localhost:8080/ChatServerEE/chat?type=rooms&operation=remPublic&name=New%20room&initiator=Alex
+
+operation=queryPrivate(name=NAME)
+http://localhost:8080/ChatServerEE/chat?type=rooms&operation=queryPrivate&name=Alex
+operation=queryPrivate(initiator=NAME, user=NAME)
+http://localhost:8080/ChatServerEE/chat?type=rooms&operation=addPrivate&initiator=Alex&user=Viktor
+http://localhost:8080/ChatServerEE/chat?type=rooms&operation=remPrivate&initiator=Viktor&user=Alex

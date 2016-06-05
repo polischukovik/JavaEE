@@ -6,9 +6,13 @@ import java.io.OutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 public class MessageServlet extends HttpServlet {
 	private static final int MAX_PARAM_LENGTH = 200;
+	
+    static final String LOGIN = "admin";
+    static final String PASS = "admin";
 
 	private Users users = Users.getInstance();
 	private Rooms rooms = Rooms.getInstance();
@@ -29,12 +33,8 @@ public class MessageServlet extends HttpServlet {
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException 
 		{		
-			resp.setContentType("application/json");
-			
+			resp.setContentType("application/json");			
 			String type = req.getParameter("type");
-			if(type.equals("") || type == null){
-				returnBadRequest(req, resp);
-			}
 			
 			if(type.equals("user")){
 				String op = req.getParameter("operation");
@@ -76,6 +76,17 @@ public class MessageServlet extends HttpServlet {
 				}					
 			}
 			
+			if(type.equals("login")){
+				String op = req.getParameter("operation");
+				if(op.equals("exit")){
+			        HttpSession session = req.getSession(false);
+			        if (session != null){
+			        	session.removeAttribute("user_login");
+			        }
+			        resp.sendRedirect("index.jsp");
+				}
+			}
+			
 			if(type.equals("rooms")){
 				String op = req.getParameter("operation");
 				if(op.equals("queryPublic")){
@@ -95,8 +106,13 @@ public class MessageServlet extends HttpServlet {
 						if(initiatorObj == null){
 							returnBadRequest(req, resp);
 						}else{
-							rooms.addPublicRoom(roomName, initiatorObj);
-							resp.setStatus(HttpServletResponse.SC_OK);
+							Room room = rooms.getPublicRoomByName(roomName);
+							if(room == null){
+								rooms.addPublicRoom(roomName, initiatorObj);
+								resp.setStatus(HttpServletResponse.SC_OK);
+							}else{
+								returnBadRequest(req, resp);
+							}
 						}	
 					}
 				}else if(op.equals("remPublic")){
@@ -196,8 +212,13 @@ public class MessageServlet extends HttpServlet {
 						if(initiatorObj == null || userObj == null){
 							returnBadRequest(req, resp);
 						}else{
-							rooms.addPrivateRoom(initiatorObj, userObj);
-							resp.setStatus(HttpServletResponse.SC_OK);
+							Room room = rooms.getPrivateRoomByParticipants(initiatorObj, userObj);
+							if(room == null){
+								rooms.addPrivateRoom(initiatorObj, userObj);
+								resp.setStatus(HttpServletResponse.SC_OK);
+							}else{
+								returnBadRequest(req, resp);
+							}
 						}	
 					}
 				}
@@ -257,34 +278,24 @@ public class MessageServlet extends HttpServlet {
 	public void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException 
 	{
-		String message = "";
-		try(InputStream is = req.getInputStream()){
-			message = MessageIO.formPackage(is);
-			is.close();
-		}
-		catch(IOException e){
-			returnInternalError(resp);
-			return;
-		}
-		
-		String roomStr = req.getParameter("room");
-		int room = 0;
-		try{
-			room = (roomStr == null || roomStr == "") ? 0 : Integer.parseInt(roomStr);
-		}catch(NumberFormatException e){
-			resp.sendRedirect("core/BadRequest.html");
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return;
+		String type = req.getParameter("type");
+		String op = req.getParameter("operation");
+		if(checkParameter(type)){
+			if(type.equals("login")){
+				if(op.equals("enter")){
+					String login = req.getParameter("login");
+			        String password = req.getParameter("password");
+
+			        if (LOGIN.equals(login) && PASS.equals(password)) {
+			            HttpSession session = req.getSession(true);
+			            session.setAttribute("user_login", login);
+			        }			        
+			        resp.sendRedirect("index.jsp");				
+				}
+			}			
 		}
 		
-		Message msg = Message.fromJSON(message);
-		if (msg != null){
-			//msgList.add(room, msg);
-		}
-		else{
-			resp.sendRedirect("core/BadRequest.html");
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			
-		}						
+		
+		
 	}
 }
