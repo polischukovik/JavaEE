@@ -7,18 +7,17 @@
 			var serverURL = "/ChatServerEE/chat";
 
 			document.getElementById("loginBtn").onclick = function() {
-				var data = new FormData();
-				data.append('type', 'login');
-				data.append('operation', 'enter');
-				data.append('login', document.getElementById("loginTxt").value);
-				data.append('password', document.getElementById("passwordTxt").value);
+// 				var data = new FormData();
+// 				data.append('type', 'login');
+// 				data.append('operation', 'enter');
+// 				data.append('login', document.getElementById("loginTxt").value);
+// 				data.append('password', document.getElementById("passwordTxt").value);
 
 				var param = "type=login&operation=enter&login=" + document.getElementById("loginTxt").value + "&password=" + document.getElementById("passwordTxt").value;
 				
 				var xhttp = new XMLHttpRequest();	        
 				xhttp.onreadystatechange = function() {
 					if (xhttp.readyState == 4 && xhttp.status == 200) {
-						alert(http.responseText);
 						location.reload();
 					}
 					if (xhttp.readyState == 4 && xhttp.status == 400) {
@@ -32,18 +31,17 @@
 			}
 	     
 			document.getElementById("registerBtn").onclick = function() {
-				var data = new FormData();
-				data.append('type', 'login');
-				data.append('operation', 'register');
-				data.append('login', document.getElementById("loginTxt").value);
-				data.append('password', document.getElementById("passwordTxt").value);
+// 				var data = new FormData();
+// 				data.append('type', 'login');
+// 				data.append('operation', 'register');
+// 				data.append('login', document.getElementById("loginTxt").value);
+// 				data.append('password', document.getElementById("passwordTxt").value);
 
 				var param = "type=login&operation=register&login=" + document.getElementById("loginTxt").value + "&password=" + document.getElementById("passwordTxt").value;
 				
 				var xhttp = new XMLHttpRequest();
 				xhttp.onreadystatechange = function() {
 					if (xhttp.readyState == 4 && xhttp.status == 200) {
-						alert(http.responseText);
 						document.getElementById("info").innerHTML = xhttp.responseText;
 					}
 				};

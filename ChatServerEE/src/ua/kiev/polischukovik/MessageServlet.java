@@ -2,7 +2,6 @@ package ua.kiev.polischukovik;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Enumeration;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -44,7 +43,7 @@ public class MessageServlet extends HttpServlet {
 			resp.setContentType("application/json");			
 			String type = req.getParameter("type");
 			if(checkParameter(type)){
-				returnBadRequest(req, resp);
+				returnBadRequest(req, resp);return;
 			}else{
 
 				if(type.equals("user")){
@@ -58,7 +57,7 @@ public class MessageServlet extends HttpServlet {
 							returnInternalError(resp);
 						}
 					}else{
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}					
 				}
 				
@@ -86,11 +85,11 @@ public class MessageServlet extends HttpServlet {
 						String roomName = req.getParameter("name");
 						String n = req.getParameter("n");
 						if(!(checkParameter(roomName) && checkParameter(n))){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							Room room = rooms.getPublicRoomByName(roomName);
 							if(room == null){
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}else{
 								int N = -1;
 								try{
@@ -99,7 +98,7 @@ public class MessageServlet extends HttpServlet {
 									System.err.println("Cannot parse int" + n);							
 								}
 								if(N == -1){
-									returnBadRequest(req, resp);
+									returnBadRequest(req, resp);return;
 								}else{
 									try(OutputStream os = resp.getOutputStream()){
 										MessageIO.sendMessage(room.getMessageJSON(N), os);									
@@ -113,11 +112,11 @@ public class MessageServlet extends HttpServlet {
 					}else if(op.equals("queryPrivate")){
 						String user = req.getParameter("name");
 						if(!(checkParameter(user))){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							User userObj = users.getUserByName(user);
 							if(userObj == null){
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}else{
 								try(OutputStream os = resp.getOutputStream()){
 									MessageIO.sendMessage(rooms.getPrivateRoomsJSON(userObj), os);	
@@ -129,7 +128,7 @@ public class MessageServlet extends HttpServlet {
 							}	
 						}
 					}else{
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}					
 				}		
 			}
@@ -169,30 +168,30 @@ public class MessageServlet extends HttpServlet {
 		String type = req.getParameter("type");
 		
 		if(!checkParameter(type)){
-			returnBadRequest(req, resp);
+			returnBadRequest(req, resp);return;
 		}else{
 			if(type.equals("user")){
 				String op = req.getParameter("operation");
 				if(op.equals("addUsr")){
 					String user = req.getParameter("name");
 					if(!(checkParameter(user))){
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{
 						User userObj = users.getUserByName(user);
 						if(userObj == null){
 							users.addUser(user);
 						}else{
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}
 					}
 				}else if(op.equals("remUsr")){
 					String user = req.getParameter("name");
 					if(!(checkParameter(user))){
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{
 						User userObj = users.getUserByName(user);
 						if(userObj == null){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							users.removeUser(userObj);
 						}
@@ -200,15 +199,15 @@ public class MessageServlet extends HttpServlet {
 				}else if(op.equals("status")){
 					String status = req.getParameter("status");
 					if(!(checkParameter(status))){					
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{
 						String user = req.getParameter("user");
 						if(!(checkParameter(user))){					
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							User userObj = users.getUserByName(user);
 							if(userObj == null){
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}else{
 								try{
 									UserStatus statusObj = UserStatus.valueOf(UserStatus.class, status);
@@ -223,7 +222,7 @@ public class MessageServlet extends HttpServlet {
 					}
 				}
 				else{
-					returnBadRequest(req, resp);
+					returnBadRequest(req, resp);return;
 				}
 			}
 			
@@ -257,18 +256,18 @@ public class MessageServlet extends HttpServlet {
 					String roomName = req.getParameter("name");
 					String initiator = req.getParameter("initiator");					
 					if(!(checkParameter(roomName) && checkParameter(initiator))){
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{
 						User initiatorObj = users.getUserByName(initiator);
 						if(initiatorObj == null){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							Room room = rooms.getPublicRoomByName(roomName);
 							if(room == null){
 								rooms.addPublicRoom(roomName, initiatorObj);
 								resp.setStatus(HttpServletResponse.SC_OK);
 							}else{
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}
 						}	
 					}
@@ -276,18 +275,18 @@ public class MessageServlet extends HttpServlet {
 					String roomName = req.getParameter("name");
 					String initiator = req.getParameter("initiator");
 					if(!(checkParameter(roomName) && checkParameter(initiator))){
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{					
 						User initiatorObj = users.getUserByName(initiator);					
 						if(initiatorObj == null){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							Room room = rooms.getPublicRoomByName(roomName);
 							if(room == null){
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}else{
 								if(!room.getCreator().equals(initiatorObj)){
-									returnBadRequest(req, resp);
+									returnBadRequest(req, resp);return;
 								}else{
 									rooms.removePublicRoom(room);
 								}
@@ -298,15 +297,15 @@ public class MessageServlet extends HttpServlet {
 					String roomName = req.getParameter("roomName");
 					String message = req.getParameter("message");
 					if(!(checkParameter(roomName) && checkParameter(message))){
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{
 						Room room = rooms.getPublicRoomByName(roomName);
 						if(room == null){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							Message messageObj= Message.fromJSON(message);							
 							if(messageObj == null){
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}else{
 								rooms.addRoomsMessages(room, messageObj);
 							}									
@@ -316,19 +315,19 @@ public class MessageServlet extends HttpServlet {
 					String initiator = req.getParameter("initiator");
 					String user = req.getParameter("user");
 					if(!(checkParameter(initiator) && checkParameter(user))){
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{
 						User initiatorObj = users.getUserByName(initiator);
 						User userObj = users.getUserByName(user);
 						if(initiatorObj == null || userObj == null){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							Room room = rooms.getPrivateRoomByParticipants(initiatorObj, userObj);
 							if(room == null){
 								rooms.addPrivateRoom(initiatorObj, userObj);
 								resp.setStatus(HttpServletResponse.SC_OK);
 							}else{
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}
 						}	
 					}
@@ -336,16 +335,16 @@ public class MessageServlet extends HttpServlet {
 					String initiator = req.getParameter("initiator");
 					String user = req.getParameter("user");
 					if(!(checkParameter(initiator) && checkParameter(user))){
-						returnBadRequest(req, resp);
+						returnBadRequest(req, resp);return;
 					}else{					
 						User initiatorObj = users.getUserByName(initiator);
 						User userObj = users.getUserByName(user);
 						if(initiatorObj == null || userObj == null){
-							returnBadRequest(req, resp);
+							returnBadRequest(req, resp);return;
 						}else{
 							Room room = rooms.getPrivateRoomByParticipants(initiatorObj, userObj);
 							if(room == null){
-								returnBadRequest(req, resp);
+								returnBadRequest(req, resp);return;
 							}else{
 								rooms.removePublicRoom(room);
 							}
@@ -353,7 +352,7 @@ public class MessageServlet extends HttpServlet {
 					}
 				}
 				else{
-					returnBadRequest(req, resp);
+					returnBadRequest(req, resp);return;
 				}					
 			}
 			

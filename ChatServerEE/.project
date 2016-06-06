@@ -3,6 +3,7 @@
 	<name>ChatServerEE</name>
 	<comment></comment>
 	<projects>
+		<project>ChatEETest</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
