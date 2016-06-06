@@ -1,8 +1,11 @@
 package ua.kiev.polischukovik;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Enumeration;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,23 +33,147 @@ public class MessageServlet extends HttpServlet {
 		rooms.addPublicRoom("Hello fellous", users.getUserByName("Viktor"));
 	}
 	
+	public void init(ServletConfig config) throws ServletException {
+	    super.init(config);
+	    DBHelper.init();	    
+	  }
+	
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException 
 		{		
 			resp.setContentType("application/json");			
 			String type = req.getParameter("type");
+			if(checkParameter(type)){
+				returnBadRequest(req, resp);
+			}else{
+
+				if(type.equals("user")){
+					String op = req.getParameter("operation");
+					if(op.equals("query")){
+						try(OutputStream os = resp.getOutputStream()){
+							MessageIO.sendMessage(users.getVisableUsersJSON(), os);
+							resp.setStatus(HttpServletResponse.SC_OK);
+							//System.out.println(users.getVisableUsersJSON());
+						}catch(IOException e){
+							returnInternalError(resp);
+						}
+					}else{
+						returnBadRequest(req, resp);
+					}					
+				}
+				
+				if(type.equals("login")){
+					String op = req.getParameter("operation");
+					if(op.equals("exit")){
+				        HttpSession session = req.getSession(false);
+				        if (session != null){
+				        	session.removeAttribute("user_login");
+				        }
+				        resp.sendRedirect("index.jsp");
+					}
+				}
+				
+				if(type.equals("rooms")){
+					String op = req.getParameter("operation");
+					if(op.equals("queryPublic")){
+						try(OutputStream os = resp.getOutputStream()){
+							MessageIO.sendMessage(rooms.getPublicRoomsJSON(), os);
+							resp.setStatus(HttpServletResponse.SC_OK);
+						}catch(IOException e){
+							returnInternalError(resp);
+						}
+					}else if(op.equals("queryMsg")){
+						String roomName = req.getParameter("name");
+						String n = req.getParameter("n");
+						if(!(checkParameter(roomName) && checkParameter(n))){
+							returnBadRequest(req, resp);
+						}else{
+							Room room = rooms.getPublicRoomByName(roomName);
+							if(room == null){
+								returnBadRequest(req, resp);
+							}else{
+								int N = -1;
+								try{
+									N = Integer.valueOf(n);
+								}catch(NumberFormatException e){
+									System.err.println("Cannot parse int" + n);							
+								}
+								if(N == -1){
+									returnBadRequest(req, resp);
+								}else{
+									try(OutputStream os = resp.getOutputStream()){
+										MessageIO.sendMessage(room.getMessageJSON(N), os);									
+									}
+									catch(IOException e){
+										returnInternalError(resp);
+									}
+								}
+							}						
+						}
+					}else if(op.equals("queryPrivate")){
+						String user = req.getParameter("name");
+						if(!(checkParameter(user))){
+							returnBadRequest(req, resp);
+						}else{
+							User userObj = users.getUserByName(user);
+							if(userObj == null){
+								returnBadRequest(req, resp);
+							}else{
+								try(OutputStream os = resp.getOutputStream()){
+									MessageIO.sendMessage(rooms.getPrivateRoomsJSON(userObj), os);	
+									resp.setStatus(HttpServletResponse.SC_OK);								
+								}
+								catch(IOException e){
+									returnInternalError(resp);
+								}
+							}	
+						}
+					}else{
+						returnBadRequest(req, resp);
+					}					
+				}		
+			}
 			
+		}
+
+	private void returnInternalError(HttpServletResponse resp) {
+		try {
+			resp.sendRedirect("core/InternalServerError.html");
+		} catch (IOException e) {
+			System.err.println("Cannot redirect page");
+		}
+		resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		return;
+	}
+
+	private void returnBadRequest(HttpServletRequest req, HttpServletResponse resp) {
+		
+	    try {
+	    	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);		
+			resp.sendRedirect("core/BadRequest.html");
+			//RequestDispatcher dispatcher = req.getRequestDispatcher(req.toString());
+			//dispatcher.forward(req, resp);
+		} catch ( IOException e) {
+			System.err.println("Dispatcher error");
+		}
+		return;
+	}
+	
+	private boolean checkParameter(String value){
+		return value != null && !value.equals("") && value.length() < MAX_PARAM_LENGTH;
+	}
+	
+	public void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws IOException 
+	{		
+		String type = req.getParameter("type");
+		
+		if(!checkParameter(type)){
+			returnBadRequest(req, resp);
+		}else{
 			if(type.equals("user")){
 				String op = req.getParameter("operation");
-				if(op.equals("query")){
-					try(OutputStream os = resp.getOutputStream()){
-						MessageIO.sendMessage(users.getVisableUsersJSON(), os);
-						resp.setStatus(HttpServletResponse.SC_OK);
-						//System.out.println(users.getVisableUsersJSON());
-					}catch(IOException e){
-						returnInternalError(resp);
-					}
-				}else if(op.equals("addUsr")){
+				if(op.equals("addUsr")){
 					String user = req.getParameter("name");
 					if(!(checkParameter(user))){
 						returnBadRequest(req, resp);
@@ -70,18 +197,55 @@ public class MessageServlet extends HttpServlet {
 							users.removeUser(userObj);
 						}
 					}
+				}else if(op.equals("status")){
+					String status = req.getParameter("status");
+					if(!(checkParameter(status))){					
+						returnBadRequest(req, resp);
+					}else{
+						String user = req.getParameter("user");
+						if(!(checkParameter(user))){					
+							returnBadRequest(req, resp);
+						}else{
+							User userObj = users.getUserByName(user);
+							if(userObj == null){
+								returnBadRequest(req, resp);
+							}else{
+								try{
+									UserStatus statusObj = UserStatus.valueOf(UserStatus.class, status);
+									users.setUserStatus(userObj, statusObj);
+								}catch(NullPointerException e){
+									req.setAttribute("info", "Cannot change status for user");
+								}catch(IllegalArgumentException e){
+									req.setAttribute("info", "Cannot change status for user");
+								}
+							}	
+						}
+					}
 				}
 				else{
 					returnBadRequest(req, resp);
-				}					
+				}
 			}
 			
 			if(type.equals("login")){
 				String op = req.getParameter("operation");
-				if(op.equals("exit")){
-			        HttpSession session = req.getSession(false);
-			        if (session != null){
-			        	session.removeAttribute("user_login");
+				if(op.equals("enter")){
+					String login = req.getParameter("login");
+			        String password = req.getParameter("password");
+
+			        if (DBHelper.checkCredentials(login, password)) {
+			            HttpSession session = req.getSession(true);
+			            session.setAttribute("user_login", login);
+			        }			        
+			        resp.sendRedirect("index.jsp");	
+				}else if(op.equals("register")){
+					String login = req.getParameter("login");
+			        String password = req.getParameter("password");
+
+			        if (DBHelper.createAccount(login, password)) {
+			        	resp.getWriter().write("Account " + login + " created");
+			        }else{
+			        	resp.getWriter().write("Cannot create account");
 			        }
 			        resp.sendRedirect("index.jsp");
 				}
@@ -89,14 +253,7 @@ public class MessageServlet extends HttpServlet {
 			
 			if(type.equals("rooms")){
 				String op = req.getParameter("operation");
-				if(op.equals("queryPublic")){
-					try(OutputStream os = resp.getOutputStream()){
-						MessageIO.sendMessage(rooms.getPublicRoomsJSON(), os);
-						resp.setStatus(HttpServletResponse.SC_OK);
-					}catch(IOException e){
-						returnInternalError(resp);
-					}
-				}else if(op.equals("addPublic")){
+				if(op.equals("addPublic")){
 					String roomName = req.getParameter("name");
 					String initiator = req.getParameter("initiator");					
 					if(!(checkParameter(roomName) && checkParameter(initiator))){
@@ -137,34 +294,6 @@ public class MessageServlet extends HttpServlet {
 							}
 						}
 					}
-				}else if(op.equals("queryMsg")){
-					String roomName = req.getParameter("name");
-					String n = req.getParameter("n");
-					if(!(checkParameter(roomName) && checkParameter(n))){
-						returnBadRequest(req, resp);
-					}else{
-						Room room = rooms.getPublicRoomByName(roomName);
-						if(room == null){
-							returnBadRequest(req, resp);
-						}else{
-							int N = -1;
-							try{
-								N = Integer.valueOf(n);
-							}catch(NumberFormatException e){
-								System.err.println("Cannot parse int" + n);							
-							}
-							if(N == -1){
-								returnBadRequest(req, resp);
-							}else{
-								try(OutputStream os = resp.getOutputStream()){
-									MessageIO.sendMessage(room.getMessageJSON(N), os);									
-								}
-								catch(IOException e){
-									returnInternalError(resp);
-								}
-							}
-						}						
-					}
 				}else if(op.equals("addMsg")){
 					String roomName = req.getParameter("roomName");
 					String message = req.getParameter("message");
@@ -182,24 +311,6 @@ public class MessageServlet extends HttpServlet {
 								rooms.addRoomsMessages(room, messageObj);
 							}									
 						}						
-					}
-				}else if(op.equals("queryPrivate")){
-					String user = req.getParameter("name");
-					if(!(checkParameter(user))){
-						returnBadRequest(req, resp);
-					}else{
-						User userObj = users.getUserByName(user);
-						if(userObj == null){
-							returnBadRequest(req, resp);
-						}else{
-							try(OutputStream os = resp.getOutputStream()){
-								MessageIO.sendMessage(rooms.getPrivateRoomsJSON(userObj), os);	
-								resp.setStatus(HttpServletResponse.SC_OK);								
-							}
-							catch(IOException e){
-								returnInternalError(resp);
-							}
-						}	
 					}
 				}else if(op.equals("addPrivate")){
 					String initiator = req.getParameter("initiator");
@@ -221,8 +332,7 @@ public class MessageServlet extends HttpServlet {
 							}
 						}	
 					}
-				}
-				else if(op.equals("remPrivate")){
+				}else if(op.equals("remPrivate")){
 					String initiator = req.getParameter("initiator");
 					String user = req.getParameter("user");
 					if(!(checkParameter(initiator) && checkParameter(user))){
@@ -245,57 +355,36 @@ public class MessageServlet extends HttpServlet {
 				else{
 					returnBadRequest(req, resp);
 				}					
-			}		
+			}
+			
+			if(checkParameter(type)){
+				if(type.equals("login")){
+					String op = req.getParameter("operation");
+					
+					if(op.equals("enter")){
+						String login = req.getParameter("login");
+				        String password = req.getParameter("password");
+				        
+				        if (DBHelper.checkCredentials(login, password)) {
+				            HttpSession session = req.getSession(true);
+				            session.setAttribute("user_login", login);
+				        }			        
+				        resp.sendRedirect("index.jsp");				
+					}else if(op.equals("register")){		
+						String login = req.getParameter("login");
+				        String password = req.getParameter("password");
+				        
+				        if (DBHelper.createAccount(login, password)) {
+				            req.setAttribute("info", "Success");
+				        }else{
+				        	req.setAttribute("info", "Register failed");
+				        }
+				        
+				        resp.sendRedirect("index.jsp");		
+					}
+				}	
+			}
 		}
-
-	private void returnInternalError(HttpServletResponse resp) {
-		try {
-			resp.sendRedirect("core/InternalServerError.html");
-		} catch (IOException e) {
-			System.err.println("Cannot redirect page");
-		}
-		resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		return;
-	}
-
-	private void returnBadRequest(HttpServletRequest req, HttpServletResponse resp) {
-		
-	    try {
-	    	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);		
-			resp.sendRedirect("core/BadRequest.html");
-			//RequestDispatcher dispatcher = req.getRequestDispatcher(req.toString());
-			//dispatcher.forward(req, resp);
-		} catch ( IOException e) {
-			System.err.println("Dispatcher error");
-		}
-		return;
-	}
-	
-	private boolean checkParameter(String value){
-		return value != null && !value.equals("") && value.length() < MAX_PARAM_LENGTH;
-	}
-	
-	public void doPost(HttpServletRequest req, HttpServletResponse resp)
-			throws IOException 
-	{
-		String type = req.getParameter("type");
-		String op = req.getParameter("operation");
-		if(checkParameter(type)){
-			if(type.equals("login")){
-				if(op.equals("enter")){
-					String login = req.getParameter("login");
-			        String password = req.getParameter("password");
-
-			        if (LOGIN.equals(login) && PASS.equals(password)) {
-			            HttpSession session = req.getSession(true);
-			            session.setAttribute("user_login", login);
-			        }			        
-			        resp.sendRedirect("index.jsp");				
-				}
-			}			
-		}
-		
-		
 		
 	}
 }

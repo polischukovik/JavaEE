@@ -31,8 +31,8 @@ public class Users {
 	/*	
 	 * parameters type: "login", operation: "setStatus":	 userName, status
 	 */
-	public void setUserStatus(String user, UserStatus status) {
-		list.get(user).setStatus(status);
+	public void setUserStatus(User user, UserStatus status) {
+		list.get(user.getName()).setStatus(status);
 	}
 	
 	public User getUserByName(String name){
