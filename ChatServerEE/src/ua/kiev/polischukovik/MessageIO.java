@@ -14,12 +14,12 @@ public class MessageIO {
 		/*
 		 * First int in message is message length
 		 */
-		byte[] intBuff = new byte[Integer.BYTES];
-		inputStream.read(intBuff, 0, Integer.BYTES);		
-		int messageSize = ByteBuffer.wrap(intBuff).getInt();
-		
-		byte[] messageBuff = new byte[messageSize];
-		inputStream.read(messageBuff, 0, messageSize);
+//		byte[] intBuff = new byte[Integer.BYTES];
+//		inputStream.read(intBuff, 0, Integer.BYTES);		
+//		int messageSize = ByteBuffer.wrap(intBuff).getInt();
+//		
+		byte[] messageBuff = new byte[100_000];
+		inputStream.read(messageBuff, 0, 100_000);
 		return new String(messageBuff);
 	}
 
@@ -27,7 +27,7 @@ public class MessageIO {
 		/*
 		 * create header containing size of transaction
 		 */
-		outputStream.write(ByteBuffer.allocate(Integer.BYTES).putInt(json.length()).array());
+		//outputStream.write(ByteBuffer.allocate(Integer.BYTES).putInt(json.length()).array());
 		outputStream.write(json.getBytes());
 	}
 

@@ -2,6 +2,9 @@ package ua.kiev.polischukovik;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -30,6 +33,11 @@ public class MessageServlet extends HttpServlet {
 		rooms.addPublicRoom("Alex created room", users.getUserByName("Alex"));
 		rooms.addPublicRoom("Selling things", users.getUserByName("Maxim"));
 		rooms.addPublicRoom("Hello fellous", users.getUserByName("Viktor"));
+		
+		Calendar cal = Calendar.getInstance();		
+		rooms.getPublicRoomByName("Alex created room").addMessage(new Message(cal.getTime() , "Alex", "Hello dummy"));
+		rooms.getPublicRoomByName("Alex created room").addMessage(new Message(cal.getTime() , "Viktor", "You are dummy dummy"));
+		
 	}
 	
 	public void init(ServletConfig config) throws ServletException {
@@ -40,10 +48,11 @@ public class MessageServlet extends HttpServlet {
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException 
 		{		
-			resp.setContentType("application/json");			
+			//resp.setContentType("application/json");			
 			String type = req.getParameter("type");
-			if(checkParameter(type)){
-				returnBadRequest(req, resp);return;
+			if(!checkParameter(type)){
+				returnBadRequest(req, resp);
+				return;
 			}else{
 
 				if(type.equals("user")){
@@ -57,7 +66,8 @@ public class MessageServlet extends HttpServlet {
 							returnInternalError(resp);
 						}
 					}else{
-						returnBadRequest(req, resp);return;
+						returnBadRequest(req, resp);
+						return;
 					}					
 				}
 				
@@ -66,9 +76,15 @@ public class MessageServlet extends HttpServlet {
 					if(op.equals("exit")){
 				        HttpSession session = req.getSession(false);
 				        if (session != null){
+				        	users.removeUser(users.getUserByName((String) session.getAttribute("user_login")));
 				        	session.removeAttribute("user_login");
 				        }
-				        resp.sendRedirect("index.jsp");
+				        try {
+							req.getRequestDispatcher("index.jsp").forward(req, resp);
+						} catch (ServletException e) {
+							e.printStackTrace();
+						}
+				        return;	
 					}
 				}
 				
@@ -235,8 +251,14 @@ public class MessageServlet extends HttpServlet {
 			        if (DBHelper.checkCredentials(login, password)) {
 			            HttpSession session = req.getSession(true);
 			            session.setAttribute("user_login", login);
+			            users.addUser(login);
 			        }			        
-			        resp.sendRedirect("index.jsp");	
+			        try {
+						req.getRequestDispatcher("index.jsp").forward(req, resp);
+					} catch (ServletException e) {
+						e.printStackTrace();
+					}
+			        return;	
 				}else if(op.equals("register")){
 					String login = req.getParameter("login");
 			        String password = req.getParameter("password");
@@ -246,7 +268,12 @@ public class MessageServlet extends HttpServlet {
 			        }else{
 			        	resp.getWriter().write("Cannot create account");
 			        }
-			        resp.sendRedirect("index.jsp");
+			        try {
+						req.getRequestDispatcher("index.jsp").forward(req, resp);
+					} catch (ServletException e) {
+						e.printStackTrace();
+					}
+			        return;	
 				}
 			}
 			
@@ -267,7 +294,8 @@ public class MessageServlet extends HttpServlet {
 								rooms.addPublicRoom(roomName, initiatorObj);
 								resp.setStatus(HttpServletResponse.SC_OK);
 							}else{
-								returnBadRequest(req, resp);return;
+								returnBadRequest(req, resp);
+								return;
 							}
 						}	
 					}
@@ -367,6 +395,7 @@ public class MessageServlet extends HttpServlet {
 				        if (DBHelper.checkCredentials(login, password)) {
 				            HttpSession session = req.getSession(true);
 				            session.setAttribute("user_login", login);
+				            users.addUser(login);
 				        }			        
 				        resp.sendRedirect("index.jsp");				
 					}else if(op.equals("register")){		
