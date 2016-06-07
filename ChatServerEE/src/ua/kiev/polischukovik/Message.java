@@ -1,12 +1,17 @@
 package ua.kiev.polischukovik;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Date;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 
 public class Message implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -28,7 +33,14 @@ public class Message implements Serializable {
 	}
 	
 	public static Message fromJSON(String s) {
-		Gson gson = new GsonBuilder().create();
+		
+		Gson gson = new GsonBuilder().registerTypeAdapter(Date.class, new JsonDeserializer<Date>() { 
+			   @Override
+			   public Date deserialize(JsonElement arg0, Type arg1, JsonDeserializationContext arg2) throws JsonParseException {
+				      return new Date(arg0.getAsJsonPrimitive().getAsLong()); 
+				   }
+			
+				}).create();
 		return gson.fromJson(s, Message.class);
 	}
 	

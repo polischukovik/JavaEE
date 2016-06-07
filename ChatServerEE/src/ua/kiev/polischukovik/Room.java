@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 public class Room implements Serializable {
 	
 	private String name;
+	private String initiator;
 	private transient int numberOfParticipants = 0;
 	private transient boolean isPrivate;
 	private transient List<User> participants = new ArrayList<>();
@@ -23,6 +24,7 @@ public class Room implements Serializable {
 		super();
 		this.name = name;
 		participants.add(creator);
+		initiator = creator.getName();
 		numberOfParticipants = participants.size();
 		this.isPrivate = false;
 	}

@@ -13,6 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class MessageServlet extends HttpServlet {
 	private static final int MAX_PARAM_LENGTH = 200;
 	
@@ -30,13 +33,14 @@ public class MessageServlet extends HttpServlet {
 		users.addUser("Andrew");
 		users.addUser("Oleg");
 		
+		rooms.addPublicRoom("GENERAL", users.getUserByName("Alex"));
 		rooms.addPublicRoom("Alex created room", users.getUserByName("Alex"));
 		rooms.addPublicRoom("Selling things", users.getUserByName("Maxim"));
 		rooms.addPublicRoom("Hello fellous", users.getUserByName("Viktor"));
 		
 		Calendar cal = Calendar.getInstance();		
-		rooms.getPublicRoomByName("Alex created room").addMessage(new Message(cal.getTime() , "Alex", "Hello dummy"));
-		rooms.getPublicRoomByName("Alex created room").addMessage(new Message(cal.getTime() , "Viktor", "You are dummy dummy"));
+		rooms.getPublicRoomByName("GENERAL").addMessage(new Message(cal.getTime() , "Alex", "Hello dummy"));
+		rooms.getPublicRoomByName("GENERAL").addMessage(new Message(cal.getTime() , "Viktor", "You are dummy dummy"));
 		
 	}
 	
@@ -64,7 +68,39 @@ public class MessageServlet extends HttpServlet {
 							//System.out.println(users.getVisableUsersJSON());
 						}catch(IOException e){
 							returnInternalError(resp);
+							return;
 						}
+					}else if(op.equals("getLogin")){	
+						Object obj = req.getSession(false).getAttribute("user_login");
+						if(obj != null){
+							String login = req.getSession(false).getAttribute("user_login").toString();
+							try(OutputStream os = resp.getOutputStream()){
+								MessageIO.sendMessage(new GsonBuilder().setPrettyPrinting().create().toJson(login), os);
+								resp.setStatus(HttpServletResponse.SC_OK);		
+								return;
+							}
+							catch(IOException e){
+								returnInternalError(resp);
+							}			
+						}								
+					}else if(op.equals("getStatus")){					
+						try(OutputStream os = resp.getOutputStream()){							
+							MessageIO.sendMessage(new GsonBuilder()
+									.setPrettyPrinting()
+									.create()
+									.toJson(users
+											.getUserByName(req
+													.getSession(false)
+													.getAttribute("user_login")
+													.toString())
+											.getStatus()), os);
+
+							resp.setStatus(HttpServletResponse.SC_OK);	
+							return;														
+						}
+						catch(IOException e){
+							returnInternalError(resp);
+						}					
 					}else{
 						returnBadRequest(req, resp);
 						return;
@@ -78,6 +114,7 @@ public class MessageServlet extends HttpServlet {
 				        if (session != null){
 				        	users.removeUser(users.getUserByName((String) session.getAttribute("user_login")));
 				        	session.removeAttribute("user_login");
+				        	return;
 				        }
 				        try {
 							req.getRequestDispatcher("index.jsp").forward(req, resp);
@@ -117,7 +154,8 @@ public class MessageServlet extends HttpServlet {
 									returnBadRequest(req, resp);return;
 								}else{
 									try(OutputStream os = resp.getOutputStream()){
-										MessageIO.sendMessage(room.getMessageJSON(N), os);									
+										MessageIO.sendMessage(room.getMessageJSON(N), os);	
+										return;
 									}
 									catch(IOException e){
 										returnInternalError(resp);
@@ -136,7 +174,8 @@ public class MessageServlet extends HttpServlet {
 							}else{
 								try(OutputStream os = resp.getOutputStream()){
 									MessageIO.sendMessage(rooms.getPrivateRoomsJSON(userObj), os);	
-									resp.setStatus(HttpServletResponse.SC_OK);								
+									resp.setStatus(HttpServletResponse.SC_OK);					
+									return;
 								}
 								catch(IOException e){
 									returnInternalError(resp);
@@ -196,6 +235,7 @@ public class MessageServlet extends HttpServlet {
 						User userObj = users.getUserByName(user);
 						if(userObj == null){
 							users.addUser(user);
+							return;
 						}else{
 							returnBadRequest(req, resp);return;
 						}
@@ -210,6 +250,7 @@ public class MessageServlet extends HttpServlet {
 							returnBadRequest(req, resp);return;
 						}else{
 							users.removeUser(userObj);
+							return;
 						}
 					}
 				}else if(op.equals("status")){
@@ -217,26 +258,22 @@ public class MessageServlet extends HttpServlet {
 					if(!(checkParameter(status))){					
 						returnBadRequest(req, resp);return;
 					}else{
-						String user = req.getParameter("user");
-						if(!(checkParameter(user))){					
+						User userObj = users.getUserByName(req.getSession(false).getAttribute("user_login").toString());
+						if(userObj == null){
 							returnBadRequest(req, resp);return;
 						}else{
-							User userObj = users.getUserByName(user);
-							if(userObj == null){
-								returnBadRequest(req, resp);return;
-							}else{
-								try{
-									UserStatus statusObj = UserStatus.valueOf(UserStatus.class, status);
-									users.setUserStatus(userObj, statusObj);
-								}catch(NullPointerException e){
-									req.setAttribute("info", "Cannot change status for user");
-								}catch(IllegalArgumentException e){
-									req.setAttribute("info", "Cannot change status for user");
-								}
-							}	
+							try{
+								UserStatus statusObj = UserStatus.valueOf(UserStatus.class, status);
+								users.setUserStatus(userObj, statusObj);
+								return;
+							}catch(NullPointerException e){
+								req.setAttribute("info", "Cannot change status for user");
+							}catch(IllegalArgumentException e){
+								req.setAttribute("info", "Cannot change status for user");
+							}
 						}
 					}
-				}
+				}				
 				else{
 					returnBadRequest(req, resp);return;
 				}
@@ -252,6 +289,7 @@ public class MessageServlet extends HttpServlet {
 			            HttpSession session = req.getSession(true);
 			            session.setAttribute("user_login", login);
 			            users.addUser(login);
+			            return;
 			        }			        
 			        try {
 						req.getRequestDispatcher("index.jsp").forward(req, resp);
@@ -270,6 +308,7 @@ public class MessageServlet extends HttpServlet {
 			        }
 			        try {
 						req.getRequestDispatcher("index.jsp").forward(req, resp);
+						return;
 					} catch (ServletException e) {
 						e.printStackTrace();
 					}
@@ -317,6 +356,7 @@ public class MessageServlet extends HttpServlet {
 									returnBadRequest(req, resp);return;
 								}else{
 									rooms.removePublicRoom(room);
+									return;
 								}
 							}
 						}
@@ -409,6 +449,7 @@ public class MessageServlet extends HttpServlet {
 				        }
 				        
 				        resp.sendRedirect("index.jsp");		
+				        return;
 					}
 				}	
 			}

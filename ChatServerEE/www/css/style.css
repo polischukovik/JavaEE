@@ -1,0 +1,227 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+td {
+    text-align: left;
+    padding: 8px;
+}
+tr:nth-child(even){background-color: #f2f2f2}
+
+#users tr:hover {
+    background-color: #ffff99;
+}
+
+#rooms tr:hover {
+    background-color: #ffff99;
+}
+
+#header {
+    background-color:#ccff99;
+    color:#264d00;
+    text-align:center;
+    padding:5px;
+}
+#nav {
+    line-height:10px;
+    background-color:#eeeeee;
+    color:#264d00;
+    height:20px;
+    float:bottom;
+    padding:5px;
+}
+#loginForm {
+    width:150px;
+    float:left;
+    padding:5px;
+}
+#left-panel {
+    width:150px;
+    float:left;
+    padding:5px;    
+    margin-left: 5px;
+}
+#cont {
+    width:800px;
+    padding:5px;    
+    margin: auto;
+}
+#right-panel {
+    width:150px;
+    float:right;
+    padding:5px;    
+    margin-right: 5px;
+}
+#rooms-container {
+    width:150px;
+    float:bottom;
+    padding:10px;
+}
+#users-container {
+    width:150px;
+    float:bottom;
+    padding:10px;
+}
+#messages-container {
+    width:400px;
+    height:600px;
+    padding:10px;
+    float:left;
+}
+
+#messages-input{
+   padding:10px;
+}
+
+#footer {
+    background-color:#ccff99;
+    color:#264d00;
+    clear:both;
+    text-align:center;
+    padding:5px;
+}
+
+#nav-info{
+	float:left;
+	width:200px;
+	font-size: 20px;
+}
+
+.btn {
+  background:#ccff99;
+  border-radius: 3px;
+  font-family: Arial;
+  color: #264d00;
+  font-size: 17px;
+  padding: 3px 7px 3px 7px;
+  text-decoration: none;
+  
+}
+
+#exit-button{	
+	float:right;
+}
+
+#send-button{	
+	float:right;
+}
+
+.btn:hover {
+  background: #effc3c;
+  background-image: -webkit-linear-gradient(top, #effc3c, #8c8f34);
+  background-image: -moz-linear-gradient(top, #effc3c, #8c8f34);
+  background-image: -ms-linear-gradient(top, #effc3c, #8c8f34);
+  background-image: -o-linear-gradient(top, #effc3c, #8c8f34);
+  background-image: linear-gradient(to bottom, #effc3c, #8c8f34);
+  text-decoration: none;
+}
+
+#status {
+        width:100px;
+        font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+        float: left;
+    }
+    
+#status .wrapper {
+    display: inline-block;
+    width: 180px;
+    margin: 0 10px 0 0;
+    height: 20px;
+    padding-left: 10px;
+    position: relative;
+}
+
+.parent {
+    height: 100%;
+    width: 100%;
+    display: block;
+    cursor: pointer;
+    line-height: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: #F9F9F9;
+    border: 1px solid #AAA;
+    border-bottom: 1px solid #777;
+    color: #282D31;
+    font-weight: bold;
+    z-index: 2;
+    -webkit-transition: border-radius .1s linear, background .1s linear, z-index 0s linear;
+    -webkit-transition-delay: .8s;
+    text-align: center;
+    float: left;
+}
+
+#status .parent:hover,
+#status .content:hover ~ .parent {
+    background: #fff;
+    -webkit-transition-delay: 0s, 0s, 0s;
+}
+
+#status .content:hover ~ .parent {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    z-index: 0;
+}
+
+#status .content {
+    position: absolute;
+    top: 0;
+    display: block;
+    z-index: 1;
+    height: 0;
+    width: 180px;
+    padding-top: 20px;
+    -webkit-transition: height .5s ease;
+    -webkit-transition-delay: .4s;
+    border: 1px solid #777;
+    border-radius: 5px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+
+#status .wrapper:active .content {
+    height: 60px;
+    z-index: 3;
+    -webkit-transition-delay: 0s;
+}
+
+#status .content:hover {
+    height: 60px;
+    z-index: 3;
+    -webkit-transition-delay: 0s;
+}
+
+
+#status .content ul {
+    background: #fff;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+#status .content ul a {
+    text-decoration: none;
+}
+
+#status .content li:hover {
+    background: #eee;
+    color: #333;
+}
+
+#status .content li {
+    list-style: none;
+    text-align: left;
+    color: #888;
+    font-size: 14px;
+    line-height: 20px;
+    height: 20px;
+    padding-left: 10px;
+    border-top: 1px solid #ccc;
+}
+
+#status .content li:last-of-type {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
