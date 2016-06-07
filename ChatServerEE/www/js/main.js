@@ -238,6 +238,7 @@
 			
 			function addRooms() {
 				var param = "type=rooms&operation=addPublic&name=" + document.getElementById("room-input-txt").value + "&initiator="+ window.login;
+				document.getElementById("room-input-txt").value = "";
 				var xhttp = new XMLHttpRequest();	        
 				xhttp.onreadystatechange = function() {
 					if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -289,6 +290,7 @@
 			
 			function sendMessage() {
 				var msgtxt = document.getElementById("msg-input-txt").value;
+				document.getElementById("msg-input-txt").value = "";
 				var d = new Date();
 				var param = "";
 				var message = {
