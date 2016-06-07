@@ -163,6 +163,41 @@ public class MessageServlet extends HttpServlet {
 								}
 							}						
 						}
+					}else if(op.equals("queryPrivateMsg")){
+						String nameName = req.getParameter("name");
+						String userName = req.getParameter("user");
+						String n = req.getParameter("n");
+						if(!(checkParameter(nameName) && checkParameter(n))){
+							returnBadRequest(req, resp);return;
+						}else{
+							User user = users.getUserByName(nameName);////refact
+							User userI = users.getUserByName(userName);////
+							if(user == null){
+								return;
+							}
+							Room room = rooms.getPrivateRoomByParticipants(user, userI);
+							if(room == null){
+								returnBadRequest(req, resp);return;
+							}else{
+								int N = -1;
+								try{
+									N = Integer.valueOf(n);
+								}catch(NumberFormatException e){
+									System.err.println("Cannot parse int" + n);							
+								}
+								if(N == -1){
+									returnBadRequest(req, resp);return;
+								}else{
+									try(OutputStream os = resp.getOutputStream()){
+										MessageIO.sendMessage(room.getMessageJSON(N), os);	
+										return;
+									}
+									catch(IOException e){
+										returnInternalError(resp);
+									}
+								}
+							}
+						}
 					}else if(op.equals("queryPrivate")){
 						String user = req.getParameter("name");
 						if(!(checkParameter(user))){
@@ -368,6 +403,27 @@ public class MessageServlet extends HttpServlet {
 						returnBadRequest(req, resp);return;
 					}else{
 						Room room = rooms.getPublicRoomByName(roomName);
+						if(room == null){
+							returnBadRequest(req, resp);return;
+						}else{
+							Message messageObj= Message.fromJSON(message);							
+							if(messageObj == null){
+								returnBadRequest(req, resp);return;
+							}else{
+								rooms.addRoomsMessages(room, messageObj);
+							}									
+						}						
+					}
+				}else if(op.equals("addPrivateMsg")){
+					String nameName = req.getParameter("name");
+					String userName = req.getParameter("user");
+					String message = req.getParameter("message");
+					if(!(checkParameter(nameName) && checkParameter(message))){
+						returnBadRequest(req, resp);return;
+					}else{
+						User userOne = users.getUserByName(nameName);
+						User userTwo = users.getUserByName(userName);
+						Room room = rooms.getPrivateRoomByParticipants(userOne, userTwo);
 						if(room == null){
 							returnBadRequest(req, resp);return;
 						}else{

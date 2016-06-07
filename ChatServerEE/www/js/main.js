@@ -1,7 +1,9 @@
 			window.serverURL = "/ChatServerEE/chat";
 			window.login = "";
 			window.status = "";
+			window.isPrivate = "";
 			window.selectedRoom = "GENERAL";
+
 
 			function loginAction() {
 				var param = "type=login&operation=enter&login=" + document.getElementById("loginTxt").value + "&password=" + document.getElementById("passwordTxt").value;
@@ -67,9 +69,12 @@
 							loadUsers();
 							loadRooms('GENERAL');
 							loadMessages();
-							var usersInterval = setInterval(loadUsers, 1000);
-							var roomsInterval = setInterval(loadRooms, 1000);
-							var messagesInterval = setInterval(loadMessages, 1000);
+							loadPrivates()
+							window.usersInterval = setInterval(loadUsers, 1000);
+							window.roomsInterval = setInterval(loadRooms, 1000);
+
+							window.privatesInterval = setInterval(loadPrivates, 1000);
+							window.messagesInterval = setInterval(loadMessages, 1000);
 						}						
 					}
 					if (xhttp.readyState == 4 && xhttp.status == 400) {
@@ -128,7 +133,8 @@
 						var content = "";
 						obj.forEach(function(item, i, obj) {
 								if(item.name != window.login){
-									content = content + "<tr><td>" + item.name + "</td><td>" + item.status + "</td></tr>"
+									content = content + "<tr><td>" + item.name + "</td><td>" + item.status + "</td>" +
+											"<td><a href=\"#\" onclick=\"createPrivate('" + item.name + "');return false;\"><img src=\"/ChatServerEE/img/write.png\" width=\"20px\" height=\"20px\"></a></td></tr>"
 								}							
 							});
 						document.getElementById("users").innerHTML = "<table>" + content + "</table>";
@@ -140,6 +146,23 @@
 				
 				xhttp.open("GET", window.serverURL + "?" + param, true);
  				xhttp.setRequestHeader('Content-Type', 'application/json')
+				xhttp.send(param);
+			}
+			
+			function createPrivate(user){
+				var param = "type=rooms&operation=addPrivate&user=" + user + "&initiator="+ window.login;
+				var xhttp = new XMLHttpRequest();	        
+				xhttp.onreadystatechange = function() {
+					if (xhttp.readyState == 4 && xhttp.status == 200) {
+						loadPrivates();
+					}
+					if (xhttp.readyState == 4 && xhttp.status == 400) {
+						//document.getElementById("info").innerHTML = xhttp.responseText;
+					}
+				};
+				
+				xhttp.open("POST", window.serverURL, true);
+ 				xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
 				xhttp.send(param);
 			}
 
@@ -171,8 +194,45 @@
 				xhttp.send(param);
 			}
 			
+			function loadPrivates() {
+				var param = "type=rooms&operation=queryPrivate&name=" + window.login;
+				
+				var xhttp = new XMLHttpRequest();	        
+				xhttp.onreadystatechange = function() {
+					if (xhttp.readyState == 4 && xhttp.status == 200) {
+						var json = xhttp.responseText;
+						var obj = JSON.parse(json);
+						var content = "";
+						obj.forEach(function(item, i, obj) {
+							content = content + "<tr><td><a href=\"#\" onclick=\"changePrivateRoomSelection('" + item.name + "');return false;\">" + item.name + "</a></td>"
+															 
+							content = content + "<td><a href=\"#\" onclick=\"deletePrivateRoom('" + item.name + "');return false;\"><img src=\"/ChatServerEE/img/cross.png\" width=\"20px\" height=\"20px\"></a>"
+							
+							content = content + "<td></td></tr>";	
+						});
+						document.getElementById("privates").innerHTML = "<table>" + content + "</table>";
+					}
+					if (xhttp.readyState == 4 && xhttp.status == 400) {
+						//document.getElementById("info").innerHTML = xhttp.responseText;
+					}
+				};
+				
+				xhttp.open("GET", window.serverURL + "?" + param, true);
+ 				xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+				xhttp.send(param);
+			}
+			
 			function changeRoomSelection(room) {
+				window.isPrivate = "false";
 				window.selectedRoom = room;
+				clearInterval(refreshIntervalId);
+				loadMessages();				
+			}
+			
+			function changePrivateRoomSelection(room) {
+				window.isPrivate = "true";
+				window.selectedRoom = room;
+				clearInterval(loadPrivates, 1000, true);
 				loadMessages();				
 			}
 			
@@ -209,16 +269,41 @@
  				xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
 				xhttp.send(param);
 			}	
+			function deletePrivateRoom(roomName) {
+				var param = "type=rooms&operation=remPrivate&user=" + roomName + "&initiator=" + window.login;
+
+				var xhttp = new XMLHttpRequest();	        
+				xhttp.onreadystatechange = function() {
+					if (xhttp.readyState == 4 && xhttp.status == 200) {
+						loadRooms();
+					}
+					if (xhttp.readyState == 4 && xhttp.status == 400) {
+						//document.getElementById("info").innerHTML = xhttp.responseText;
+					}
+				};
+				
+				xhttp.open("POST", window.serverURL, true);
+ 				xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+				xhttp.send(param);
+			}	
 			
 			function sendMessage() {
 				var msgtxt = document.getElementById("msg-input-txt").value;
 				var d = new Date();
+				var param = "";
 				var message = {
 						date: d.getTime(),
 					    from: window.login,
 					    text: msgtxt
 					};
-				var param = "type=rooms&operation=addMsg&roomName=" + window.selectedRoom + "&message=" + JSON.stringify(message);
+				
+				
+				if(window.isPrivate == "true"){
+					param = "type=rooms&operation=addPrivateMsg&name=" + window.selectedRoom + "&user=" + window.login + "&message=" + JSON.stringify(message);
+				}else{
+					param = "type=rooms&operation=addMsg&roomName=" + window.selectedRoom + "&message=" + JSON.stringify(message);
+				}
+				 
 				var xhttp = new XMLHttpRequest();	        
 				xhttp.onreadystatechange = function() {
 					if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -238,8 +323,13 @@
 				if(typeof window.selectedRoom == 'undefined'){
 					window.selectedRoom = "GENERAL";
 				}
+				var param = "";
+				if(window.isPrivate == "true"){
+					param = "type=rooms&operation=queryPrivateMsg&user=" + window.login + "&name=" + window.selectedRoom + "&n=0";
+				}else{
+					param = "type=rooms&operation=queryMsg&name=" + window.selectedRoom + "&n=0";
+				}
 				
-				var param = "type=rooms&operation=queryMsg&name=" + window.selectedRoom + "&n=0";
 				
 				var xhttp = new XMLHttpRequest();	        
 				xhttp.onreadystatechange = function() {
