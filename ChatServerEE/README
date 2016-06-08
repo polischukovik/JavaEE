@@ -1,5 +1,7 @@
 
-Known Issues:
+Access: localhost:8080/ChatServerEE/index.jsp
+
+Known Issues & TODO:
 Server side:
 - база данних поки тільки для Аккаунтів
 - User & Account - різні сутності(User.name = Account.login)
