@@ -24,7 +24,8 @@
 	        	<td><input type="button" id="loginBtn" value="Log in" onclick="loginAction()"></td>
 	            <td><input type="button" id="registerBtn" value="Register" onclick="registerAction()"></td>
             </tr>
-        </table>
+        </table><br>
+	    <div id = "loading" style="display:none"><img id = "myImage" src = "img/loader.gif"></div>
     <% } else { %>
       	<div id="nav">
       		<div id="nav-info">      	
