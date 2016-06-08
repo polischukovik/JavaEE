@@ -8,7 +8,8 @@
 			function loginAction() {
 				var param = "type=login&operation=enter&login=" + document.getElementById("loginTxt").value + "&password=" + document.getElementById("passwordTxt").value;
 				
-				var xhttp = new XMLHttpRequest();	        
+				var xhttp = new XMLHttpRequest();
+				document.getElementById("loading").style.display="block";
 				xhttp.onreadystatechange = function() {
 					if (xhttp.readyState == 4 && xhttp.status == 200) {						
 						location.reload();
@@ -27,6 +28,7 @@
 				var param = "type=login&operation=register&login=" + document.getElementById("loginTxt").value + "&password=" + document.getElementById("passwordTxt").value;
 				
 				var xhttp = new XMLHttpRequest();
+				document.getElementById("loading").style.display="block";
 				xhttp.onreadystatechange = function() {
 					if (xhttp.readyState == 4 && xhttp.status == 200) {
 						location.reload();
@@ -238,7 +240,6 @@
 			
 			function addRooms() {
 				var param = "type=rooms&operation=addPublic&name=" + document.getElementById("room-input-txt").value + "&initiator="+ window.login;
-				document.getElementById("room-input-txt").value = "";
 				var xhttp = new XMLHttpRequest();	        
 				xhttp.onreadystatechange = function() {
 					if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -290,7 +291,6 @@
 			
 			function sendMessage() {
 				var msgtxt = document.getElementById("msg-input-txt").value;
-				document.getElementById("msg-input-txt").value = "";
 				var d = new Date();
 				var param = "";
 				var message = {
